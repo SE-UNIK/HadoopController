@@ -1,4 +1,4 @@
-package com.mjdraperies.hadoopcontroller;
+package com.unik.hadoopcontroller;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

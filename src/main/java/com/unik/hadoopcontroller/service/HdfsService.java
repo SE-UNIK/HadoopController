@@ -1,4 +1,4 @@
-package com.mjdraperies.hadoopcontroller.service;
+package com.unik.hadoopcontroller.service;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.springframework.beans.factory.annotation.Autowired;

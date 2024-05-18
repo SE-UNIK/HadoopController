@@ -1,4 +1,4 @@
-package com.mjdraperies.hadoopcontroller.config;
+package com.unik.hadoopcontroller.config;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
