@@ -11,8 +11,8 @@ public class HadoopControllerApplication {
 //	}
 
 	public static void main(String[] args) {
-        System.out.println("MONGO_CLUSTER: " + System.getenv("MONGO_CLUSTER"));
-        System.out.println("MONGO_DATABASE: " + System.getenv("MONGO_DATABASE"));
+        System.out.println("MONGO_CLUSTER: " + System.getenv("env.MONGO_CLUSTER"));
+        System.out.println("MONGO_DATABASE: " + System.getenv("env.MONGO_DATABASE"));
         SpringApplication.run(HadoopControllerApplication.class, args);
     }
 }
