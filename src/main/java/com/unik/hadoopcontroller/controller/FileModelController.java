@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,30 +19,52 @@ public class FileModelController {
     private FileModelService fileModelService;
 
     @GetMapping("/files")
-    public List<FileModel> getAllFileModels() {
-        return fileModelService.getAllFileModels();
+    public ResponseEntity<List<FileModel>> getAllFileModels() {
+        try {
+            List<FileModel> fileModels = fileModelService.getAllFileModels();
+            return ResponseEntity.ok(fileModels);
+        } catch (IOException e) {
+            return ResponseEntity.status(500).build();
+        }
     }
 
     @GetMapping("/files/{fileName}")
     public ResponseEntity<FileModel> getFileModelById(@PathVariable String fileName) {
-        Optional<FileModel> fileModel = fileModelService.getFileModelById(fileName);
-        return fileModel.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        try {
+            Optional<FileModel> fileModel = fileModelService.getFileModelById(fileName);
+            return fileModel.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        } catch (IOException e) {
+            return ResponseEntity.status(500).build();
+        }
     }
 
     @PostMapping("/files")
-    public FileModel createFileModel(@RequestBody FileModel fileModel) {
-        return fileModelService.createFileModel(fileModel);
+    public ResponseEntity<FileModel> createFileModel(@RequestBody FileModel fileModel) {
+        try {
+            FileModel createdFileModel = fileModelService.createFileModel(fileModel);
+            return ResponseEntity.ok(createdFileModel);
+        } catch (IOException e) {
+            return ResponseEntity.status(500).build();
+        }
     }
 
     @PutMapping("/files/{fileName}")
     public ResponseEntity<FileModel> updateFileModel(@PathVariable String fileName, @RequestBody FileModel updatedFileModel) {
-        Optional<FileModel> fileModel = fileModelService.updateFileModel(fileName, updatedFileModel);
-        return fileModel.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        try {
+            Optional<FileModel> fileModel = fileModelService.updateFileModel(fileName, updatedFileModel);
+            return fileModel.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        } catch (IOException e) {
+            return ResponseEntity.status(500).build();
+        }
     }
 
     @DeleteMapping("/files/{fileName}")
     public ResponseEntity<Void> deleteFileModel(@PathVariable String fileName) {
-        fileModelService.deleteFileModel(fileName);
-        return ResponseEntity.noContent().build();
+        try {
+            fileModelService.deleteFileModel(fileName);
+            return ResponseEntity.noContent().build();
+        } catch (IOException e) {
+            return ResponseEntity.status(500).build();
+        }
     }
 }
