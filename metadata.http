@@ -1,0 +1,16 @@
+### Find all Content
+GET http://localhost:8080/api/metadata
+
+
+
+
+### Create new Content
+POST http://localhost:8080/api/metadata
+Content-Type: application/json
+
+{
+    "title": "Sample Article",
+    "publishDate": "2024-05-27",
+    "authors": ["Author One", "Author Two"],
+    "content": "This is the content of the sample article."
+}

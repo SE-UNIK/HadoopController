@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RequestMapping("/api")
-@CrossOrigin(origins = "http://localhost:3000") // Replace with your frontend URL
+@CrossOrigin(origins = "http://localhost:8081")
 @RestController
 public class MetadataController {
 
