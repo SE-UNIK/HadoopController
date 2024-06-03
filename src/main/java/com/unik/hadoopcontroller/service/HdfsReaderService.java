@@ -27,7 +27,7 @@ public class HdfsReaderService {
         logger.info("Initializing Hadoop configuration");
         logger.info("Configured fs.defaultFS: {}", fsDefaultFS);
 
-        Path filePath = new Path("/user/root/input/alice.txt");
+        Path filePath = new Path("/user/root/input/data.txt");
         logger.info("Reading from HDFS path: {}", filePath);
 
         try (FSDataInputStream inputStream = fileSystem.open(filePath); Scanner scanner = new Scanner(inputStream)) {
