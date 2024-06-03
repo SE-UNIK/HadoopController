@@ -1,0 +1,46 @@
+### Create a new FileModel
+POST http://localhost:8080/api/files
+Content-Type: application/json
+
+{
+  "fileName": "example.txt",
+  "fileSize": 1024,
+  "fileType": "text/plain",
+  "filePath": "/path/to/example.txt"
+}
+
+###
+
+### Get all FileModels
+GET http://localhost:8080/api/files
+Accept: application/json
+
+###
+
+### Get a specific FileModel by fileName
+GET http://localhost:8080/api/files/example.txt
+Accept: application/json
+
+###
+
+### Update an existing FileModel
+PUT http://localhost:8080/api/files/example.txt
+Content-Type: application/json
+
+{
+  "fileName": "example.txt",
+  "fileSize": 2048,
+  "fileType": "text/plain",
+  "filePath": "/new/path/to/example.txt"
+}
+
+###
+
+### Delete a specific FileModel by fileName
+DELETE http://localhost:8080/api/files/example.txt
+
+###
+
+### Get all FileModels again to verify the delete
+GET http://localhost:8080/api/files
+Accept: application/json
