@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "hdfs://172.19.0.6:9000") // Replace with your frontend URL
+@CrossOrigin(origins = "*") // Replace with your frontend URL
 public class FileModelController {
 
     @Autowired
@@ -24,7 +24,7 @@ public class FileModelController {
             List<FileModel> fileModels = fileModelService.getAllFileModels();
             return ResponseEntity.ok(fileModels);
         } catch (IOException e) {
-            return ResponseEntity.status(598).build();
+            return ResponseEntity.status(500).build();
         }
     }
 

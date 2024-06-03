@@ -5,7 +5,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.springframework.stereotype.Service;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -63,13 +66,33 @@ public class FileModelService {
 
     public FileModel createFileModel(FileModel fileModel) throws IOException {
         FileSystem fs = getFileSystem();
-        Path filePath = new Path(fileModel.getFilePath());
-        if (!fs.exists(filePath)) {
-            FSDataOutputStream outputStream = fs.create(filePath);
-            outputStream.writeUTF("Sample content");  // Or you can write actual file content
-            outputStream.close();
+
+        // Construct the full path in HDFS
+        Path hdfsPath = new Path(fileModel.getFilePath());
+
+        // Check if the file already exists
+        if (fs.exists(hdfsPath)) {
+            throw new IOException("File already exists: " + hdfsPath);
         }
-        fs.close();
+
+        // Create a stream to read the file from the local filesystem
+        InputStream inputStream = new FileInputStream(fileModel.getFilePath());
+
+        // Create a stream to write to HDFS
+        OutputStream outputStream = fs.create(hdfsPath);
+
+        // Copy the contents from the local file to HDFS
+        byte[] buffer = new byte[1024];
+        int bytesRead;
+        while ((bytesRead = inputStream.read(buffer))!= -1) {
+            outputStream.write(buffer, 0, bytesRead);
+        }
+
+        // Close streams
+        inputStream.close();
+        outputStream.close();
+
+        // Return the created FileModel (you might want to update it with the HDFS path)
         return fileModel;
     }
 
