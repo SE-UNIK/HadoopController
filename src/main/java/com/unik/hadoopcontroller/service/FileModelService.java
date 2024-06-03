@@ -12,16 +12,16 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public abstract class FileModelService {
+public class FileModelService {
 
-    private static final String HDFS_URI = "hdfs://your-hdfs-uri:8020";
-    private static final Configuration configuration = new Configuration();
+    protected static final String HDFS_URI = "hdfs://172.19.0.6:9000";
+    protected static final Configuration configuration = new Configuration();
 
     static {
         configuration.set("fs.defaultFS", HDFS_URI);
     }
 
-    private FileSystem getFileSystem() throws IOException {
+    protected FileSystem getFileSystem() throws IOException {
         return FileSystem.get(URI.create(HDFS_URI), configuration);
     }
 
