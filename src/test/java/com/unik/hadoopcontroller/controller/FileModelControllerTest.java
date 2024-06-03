@@ -1,7 +1,5 @@
 package com.unik.hadoopcontroller.controller;
 
-import com.unik.hadoopcontroller.model.FileModel;
-import com.unik.hadoopcontroller.service.FileModelService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;

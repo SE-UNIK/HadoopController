@@ -1,6 +1,5 @@
 package com.unik.hadoopcontroller.service;
 
-import com.unik.hadoopcontroller.model.FileModel;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;

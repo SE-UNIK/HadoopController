@@ -45,6 +45,13 @@
             <artifactId>hadoop-hdfs-client</artifactId>
             <version>3.2.1</version>
         </dependency>
+            <!-- Spring for Apache Hadoop -->
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-hadoop</artifactId>
+            <version>2.5.0.RELEASE</version>
+        </dependency>
+
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongodb-driver-core</artifactId>
