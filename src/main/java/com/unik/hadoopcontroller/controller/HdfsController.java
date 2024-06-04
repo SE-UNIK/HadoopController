@@ -1,24 +1,24 @@
 package com.unik.hadoopcontroller.controller;
 
-import com.unik.hadoopcontroller.service.HdfsService;
+import com.unik.hadoopcontroller.service.HdfsReaderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.List;
 
-@RequestMapping("/api")
+@RequestMapping("/files")
 @CrossOrigin(origins = "http://localhost:8081")
 @RestController
 public class HdfsController {
 
     @Autowired
-    private HdfsService hdfsService;
+    private HdfsReaderService hdfsReaderService;
 
     @GetMapping("/read")
     public String readFile(@RequestParam String path) {
         try {
-            return hdfsService.readFile(path);
+            return hdfsReaderService.readFromHdfs(path);
         } catch (IOException e) {
             return "Error reading from HDFS: " + e.getMessage();
         }
@@ -27,8 +27,8 @@ public class HdfsController {
     @PostMapping("/write")
     public String writeFile(@RequestParam String path, @RequestParam String content) {
         try {
-            hdfsService.writeFile(path, content);
-            return "File written to HDFS successfully.";
+            hdfsReaderService.writeToHdfs(path, content);
+            return "Successfully written to HDFS.";
         } catch (IOException e) {
             return "Error writing to HDFS: " + e.getMessage();
         }
@@ -37,7 +37,7 @@ public class HdfsController {
     @DeleteMapping("/delete")
     public String deleteFile(@RequestParam String path) {
         try {
-            boolean deleted = hdfsService.deleteFile(path);
+            boolean deleted = hdfsReaderService.deleteFile(path);
             return deleted ? "File deleted successfully." : "File deletion failed.";
         } catch (IOException e) {
             return "Error deleting file from HDFS: " + e.getMessage();
@@ -45,20 +45,21 @@ public class HdfsController {
     }
 
     @GetMapping("/exists")
-    public boolean fileExists(@RequestParam String path) {
+    public String fileExists(@RequestParam String path) {
         try {
-            return hdfsService.fileExists(path);
+            boolean exists = hdfsReaderService.fileExists(path);
+            return exists ? "File exists." : "File does not exist.";
         } catch (IOException e) {
-            return false;
+            return "Error checking file existence: " + e.getMessage();
         }
     }
 
     @GetMapping("/list")
     public List<String> listFiles(@RequestParam String directoryPath) {
         try {
-            return hdfsService.listFiles(directoryPath);
+            return hdfsReaderService.listFiles(directoryPath);
         } catch (IOException e) {
-            return null;
+            return List.of("Error listing files in directory: " + e.getMessage());
         }
     }
 }

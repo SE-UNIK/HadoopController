@@ -1,3 +1,19 @@
 ### Test HDFS Reader Service
-GET http://localhost:8080/files/hadoop
+GET http://localhost:8080/files/read?path=/user/hadoop/inputs/alice.txt
+Accept: application/json
+
+### Test HDFS Write Service
+POST http://localhost:8080/files/write
+Content-Type: application/x-www-form-urlencoded
+
+path=/user/hadoop/inputs/newfile.txt&content=Hello, HDFS!
+
+### Test HDFS Delete Service
+DELETE http://localhost:8080/files/delete?path=/user/hadoop/inputs/alice.txt
+
+### Test HDFS File Exists
+GET http://localhost:8080/files/exists?path=/user/hadoop/inputs/alice.txt
+
+### Test HDFS List Files
+GET http://localhost:8080/files/list?directoryPath=/user/hadoop/inputs
 Accept: application/json
