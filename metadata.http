@@ -14,3 +14,22 @@ Content-Type: application/json
     "authors": ["Author One", "Author Two"],
     "content": "This is the content of the sample article."
 }
+
+
+### Find all files
+GET http://localhost:8080/api/file
+
+
+
+
+### Create new file
+POST http://localhost:8080/api/file
+Content-Type: application/json
+
+{
+    "title": "Title 1",
+    "fileName": "File name",
+    "filePath": "/path/to/file",
+    "fileSize": "100",
+    "authors": ["Author One", "Author Two"]
+}

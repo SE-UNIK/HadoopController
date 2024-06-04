@@ -1,6 +1,6 @@
 package com.unik.hadoopcontroller.controller;
 
-import com.unik.hadoopcontroller.model.Metadata;
+import com.unik.hadoopcontroller.model.MetadataModel;
 import com.unik.hadoopcontroller.service.MetadataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,24 +18,24 @@ public class MetadataController {
     private MetadataService metadataService;
 
     @GetMapping("/metadata")
-    public List<Metadata> getAllMetadata() {
+    public List<MetadataModel> getAllMetadata() {
         return metadataService.getAllMetadata();
     }
 
     @GetMapping("/metadata/{id}")
-    public ResponseEntity<Metadata> getMetadataById(@PathVariable String id) {
-        Optional<Metadata> metadata = metadataService.getMetadataById(id);
+    public ResponseEntity<MetadataModel> getMetadataById(@PathVariable String id) {
+        Optional<MetadataModel> metadata = metadataService.getMetadataById(id);
         return metadata.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping("/metadata")
-    public Metadata createMetadata(@RequestBody Metadata metadata) {
-        return metadataService.createMetadata(metadata);
+    public MetadataModel createMetadata(@RequestBody MetadataModel metadataModel) {
+        return metadataService.createMetadata(metadataModel);
     }
 
     @PutMapping("/metadata/{id}")
-    public ResponseEntity<Metadata> updateMetadata(@PathVariable String id, @RequestBody Metadata updatedMetadata) {
-        Optional<Metadata> metadata = metadataService.updateMetadata(id, updatedMetadata);
+    public ResponseEntity<MetadataModel> updateMetadata(@PathVariable String id, @RequestBody MetadataModel updatedMetadataModel) {
+        Optional<MetadataModel> metadata = metadataService.updateMetadata(id, updatedMetadataModel);
         return metadata.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 

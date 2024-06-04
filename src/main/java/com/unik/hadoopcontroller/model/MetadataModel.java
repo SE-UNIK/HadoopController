@@ -7,7 +7,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Document(collection = "metadata") //nombre de la colecion en mongodb
-public class Metadata {
+public class MetadataModel {
 	@Id
 	private String id;
 	private String title;

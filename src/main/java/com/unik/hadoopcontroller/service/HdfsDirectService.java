@@ -1,30 +1,34 @@
 package com.unik.hadoopcontroller.service;
 
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.FileStatus;
+import com.unik.hadoopcontroller.model.HdfsFileModel;
+import com.unik.hadoopcontroller.repository.HdfsFileRepository;
+import org.apache.hadoop.fs.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.UUID;
 
 @Service
-public class HdfsReaderService {
+public class HdfsDirectService {
 
-    private static final Logger logger = LoggerFactory.getLogger(HdfsReaderService.class);
+    private static final Logger logger = LoggerFactory.getLogger(HdfsDirectService.class);
 
     @Autowired
     private FileSystem fileSystem;
 
     @Value("${spring.hadoop.fsUri}")
     private String fsDefaultFS;
+
+    @Autowired
+    private HdfsFileRepository hdfsFileRepository;
 
     public String readFromHdfs(String filePathStr) throws IOException {
         logger.info("Initializing Hadoop configuration");
@@ -34,7 +38,8 @@ public class HdfsReaderService {
         logger.info("Reading from HDFS path: {}", filePath);
 
         StringBuilder content = new StringBuilder();
-        try (FSDataInputStream inputStream = fileSystem.open(filePath); Scanner scanner = new Scanner(inputStream)) {
+        try (FSDataInputStream inputStream = fileSystem.open(filePath);
+             Scanner scanner = new Scanner(inputStream)) {
             logger.info("Successfully opened HDFS file for reading");
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
@@ -54,6 +59,25 @@ public class HdfsReaderService {
             logger.info("Successfully written to HDFS file: {}", filePathStr);
         } else {
             logger.warn("File already exists: {}", filePathStr);
+        }
+    }
+    public void writeToHdfsUnique(String originalFileName, MultipartFile file,String title) throws IOException {
+        String uniqueFilePathStr = "/user/hadoop/inputs/" + UUID.randomUUID().toString() + "_" + originalFileName;
+        Path filePath = new Path(uniqueFilePathStr);
+        try (FSDataOutputStream outputStream = fileSystem.create(filePath)) {
+            outputStream.write(file.getBytes());
+            // Save the file metadata to MongoDB
+            HdfsFileModel hdfsFileModel = new HdfsFileModel();
+            hdfsFileModel.setFileName(originalFileName);
+            hdfsFileModel.setFilePath(uniqueFilePathStr);
+            hdfsFileModel.setFileSize(file.getSize());
+            hdfsFileModel.setTitle(title);
+            // Add other metadata fields as needed
+            hdfsFileRepository.save(hdfsFileModel);
+            logger.info("Successfully written to HDFS file: {}", uniqueFilePathStr);
+        } catch (IOException e) {
+            logger.error("Error writing to HDFS", e);
+            throw e;
         }
     }
 

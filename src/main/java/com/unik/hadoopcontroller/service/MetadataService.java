@@ -1,6 +1,6 @@
 package com.unik.hadoopcontroller.service;
 
-import com.unik.hadoopcontroller.model.Metadata;
+import com.unik.hadoopcontroller.model.MetadataModel;
 import com.unik.hadoopcontroller.repository.MetadataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,25 +14,25 @@ public class MetadataService {
     @Autowired
     private MetadataRepository metadataRepository;
 
-    public List<Metadata> getAllMetadata() {
+    public List<MetadataModel> getAllMetadata() {
         return metadataRepository.findAll();
     }
 
-    public Optional<Metadata> getMetadataById(String id) {
+    public Optional<MetadataModel> getMetadataById(String id) {
         return metadataRepository.findById(id);
     }
 
-    public Metadata createMetadata(Metadata metadata) {
-        return metadataRepository.save(metadata);
+    public MetadataModel createMetadata(MetadataModel metadataModel) {
+        return metadataRepository.save(metadataModel);
     }
 
-    public Optional<Metadata> updateMetadata(String id, Metadata updatedMetadata) {
-        return metadataRepository.findById(id).map(existingMetadata -> {
-            existingMetadata.setTitle(updatedMetadata.getTitle());
-            existingMetadata.setPublishDate(updatedMetadata.getPublishDate());
-            existingMetadata.setAuthors(updatedMetadata.getAuthors());
-            existingMetadata.setContent(updatedMetadata.getContent());
-            return metadataRepository.save(existingMetadata);
+    public Optional<MetadataModel> updateMetadata(String id, MetadataModel updatedMetadataModel) {
+        return metadataRepository.findById(id).map(existingMetadataModel -> {
+            existingMetadataModel.setTitle(updatedMetadataModel.getTitle());
+            existingMetadataModel.setPublishDate(updatedMetadataModel.getPublishDate());
+            existingMetadataModel.setAuthors(updatedMetadataModel.getAuthors());
+            existingMetadataModel.setContent(updatedMetadataModel.getContent());
+            return metadataRepository.save(existingMetadataModel);
         });
     }
 

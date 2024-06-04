@@ -1,8 +1,9 @@
 package com.unik.hadoopcontroller.controller;
 
-import com.unik.hadoopcontroller.service.HdfsReaderService;
+import com.unik.hadoopcontroller.service.HdfsDirectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
@@ -10,15 +11,15 @@ import java.util.List;
 @RequestMapping("/files")
 @CrossOrigin(origins = "http://localhost:8081")
 @RestController
-public class HdfsController {
+public class HdfsDirectController {
 
     @Autowired
-    private HdfsReaderService hdfsReaderService;
+    private HdfsDirectService hdfsDirectService;
 
     @GetMapping("/read")
     public String readFile(@RequestParam String path) {
         try {
-            return hdfsReaderService.readFromHdfs(path);
+            return hdfsDirectService.readFromHdfs(path);
         } catch (IOException e) {
             return "Error reading from HDFS: " + e.getMessage();
         }
@@ -27,17 +28,28 @@ public class HdfsController {
     @PostMapping("/write")
     public String writeFile(@RequestParam String path, @RequestParam String content) {
         try {
-            hdfsReaderService.writeToHdfs(path, content);
+            hdfsDirectService.writeToHdfs(path, content);
             return "Successfully written to HDFS.";
         } catch (IOException e) {
             return "Error writing to HDFS: " + e.getMessage();
+        }
+    }
+    @PostMapping("/upload")
+    public String uploadFile(@RequestParam String originalFileName,
+                             @RequestParam("file") MultipartFile file,
+                             @RequestParam String title) {
+        try{
+            hdfsDirectService.writeToHdfsUnique(originalFileName,file,title);
+            return "Successfully written to HDFS.";
+        } catch (IOException e) {
+            return "Error uploading to HDFS: " + e.getMessage();
         }
     }
 
     @DeleteMapping("/delete")
     public String deleteFile(@RequestParam String path) {
         try {
-            boolean deleted = hdfsReaderService.deleteFile(path);
+            boolean deleted = hdfsDirectService.deleteFile(path);
             return deleted ? "File deleted successfully." : "File deletion failed.";
         } catch (IOException e) {
             return "Error deleting file from HDFS: " + e.getMessage();
@@ -47,7 +59,7 @@ public class HdfsController {
     @GetMapping("/exists")
     public String fileExists(@RequestParam String path) {
         try {
-            boolean exists = hdfsReaderService.fileExists(path);
+            boolean exists = hdfsDirectService.fileExists(path);
             return exists ? "File exists." : "File does not exist.";
         } catch (IOException e) {
             return "Error checking file existence: " + e.getMessage();
@@ -57,7 +69,7 @@ public class HdfsController {
     @GetMapping("/list")
     public List<String> listFiles(@RequestParam String directoryPath) {
         try {
-            return hdfsReaderService.listFiles(directoryPath);
+            return hdfsDirectService.listFiles(directoryPath);
         } catch (IOException e) {
             return List.of("Error listing files in directory: " + e.getMessage());
         }

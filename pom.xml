@@ -38,12 +38,12 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-client</artifactId>
-            <version>3.2.1</version>
+            <version>3.3.6</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-hdfs-client</artifactId>
-            <version>3.2.1</version>
+            <version>3.3.6</version>
         </dependency>
             <!-- Spring for Apache Hadoop -->
         <dependency>

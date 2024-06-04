@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File Upload Test</title>
+  <style>
+    .container {
+      max-width: 500px;
+      margin: auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    .form-group input[type="file"],
+    .form-group input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      outline: none;
+      color: #fff;
+      background-color: #4CAF50;
+      border: none;
+      border-radius: 5px;
+      box-shadow: 0 5px #999;
+    }
+    .btn:hover {background-color: #3e8e41}
+    .btn:active {
+      background-color: #3e8e41;
+      box-shadow: 0 3px #666;
+      transform: translateY(4px);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>File Upload Test</h2>
+    <form id="uploadForm">
+      <div class="form-group">
+        <label for="file">Select file:</label>
+        <input type="file" id="file" name="file">
+      </div>
+      <div class="form-group">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title">
+      </div>
+      <button type="submit" class="btn">Upload</button>
+    </form>
+    <p id="message"></p>
+  </div>
+
+  <script>
+    document.getElementById('uploadForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      var fileInput = document.getElementById('file');
+      var titleInput = document.getElementById('title');
+      var messageElement = document.getElementById('message');
+
+      if (fileInput.files.length === 0 || titleInput.value.trim() === '') {
+        messageElement.textContent = 'Please select a file and enter a title.';
+        return;
+      }
+
+      var formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+      formData.append('originalFileName', fileInput.files[0].name);
+      formData.append('title', titleInput.value);
+
+      fetch('http://localhost:8080/files/upload', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        messageElement.textContent = 'File uploaded successfully.';
+      })
+      .catch(error => {
+        messageElement.textContent = 'File upload failed. Error: ' + error.message;
+      });
+    });
+  </script>
+</body>
+</html>
