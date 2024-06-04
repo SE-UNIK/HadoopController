@@ -15,3 +15,18 @@ GET http://localhost:8080/files/exists?path=/user/hadoop/inputs/alice.txt
 ### Test HDFS List Files
 GET http://localhost:8080/files/list?directoryPath=/user/hadoop/inputs
 Accept: application/json
+
+
+
+### Test HDFS Reader Service
+GET http://localhost:8080/files/read?path=/user/hadoop/inputs/newfile.txt
+Accept: application/json
+
+### Test HDFS Reader Service
+GET http://localhost:8080/files/read?path=/user/hadoop/inputs/d5405a50-94a6-41fa-9b20-6ba3214eea9d_alice_in_wonderland.txt
+Accept: application/json
+
+
+### Test HDFS Reader Service
+GET http://localhost:8080/files/read?path=/user/hadoop/inputs/ef412f4f-157b-4f05-a532-8b68bc45037f_hi.txt
+Accept: application/json
