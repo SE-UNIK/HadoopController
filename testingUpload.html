@@ -46,6 +46,12 @@
       box-shadow: 0 3px #666;
       transform: translateY(4px);
     }
+    .author-list {
+      margin-bottom: 15px;
+    }
+    .author-list input {
+      margin-bottom: 5px;
+    }
   </style>
 </head>
 <body>
@@ -60,28 +66,53 @@
         <label for="title">Title:</label>
         <input type="text" id="title" name="title">
       </div>
+      <div class="form-group">
+        <label for="authors">Authors:</label>
+        <div id="author-list" class="author-list">
+          <input type="text" class="author-input" name="authors" placeholder="Author name">
+        </div>
+        <button type="button" class="btn" id="add-author-button">Add Author</button>
+      </div>
       <button type="submit" class="btn">Upload</button>
     </form>
     <p id="message"></p>
   </div>
 
   <script>
+    document.getElementById('add-author-button').addEventListener('click', function() {
+      const authorList = document.getElementById('author-list');
+      const newAuthorInput = document.createElement('input');
+      newAuthorInput.type = 'text';
+      newAuthorInput.className = 'author-input';
+      newAuthorInput.name = 'authors';
+      newAuthorInput.placeholder = 'Author name';
+      authorList.appendChild(newAuthorInput);
+    });
+
     document.getElementById('uploadForm').addEventListener('submit', function(event) {
       event.preventDefault();
 
-      var fileInput = document.getElementById('file');
-      var titleInput = document.getElementById('title');
-      var messageElement = document.getElementById('message');
+      const fileInput = document.getElementById('file');
+      const titleInput = document.getElementById('title');
+      const authorInputs = document.querySelectorAll('.author-input');
+      const messageElement = document.getElementById('message');
 
       if (fileInput.files.length === 0 || titleInput.value.trim() === '') {
         messageElement.textContent = 'Please select a file and enter a title.';
         return;
       }
 
-      var formData = new FormData();
+      const authors = Array.from(authorInputs).map(input => input.value).filter(value => value.trim() !== '');
+      if (authors.length === 0) {
+        messageElement.textContent = 'Please add at least one author.';
+        return;
+      }
+
+      const formData = new FormData();
       formData.append('file', fileInput.files[0]);
       formData.append('originalFileName', fileInput.files[0].name);
       formData.append('title', titleInput.value);
+      authors.forEach((author, index) => formData.append(`authors[${index}]`, author));
 
       fetch('http://localhost:8080/files/upload', {
         method: 'POST',
