@@ -61,7 +61,7 @@ public class HdfsDirectService {
             logger.warn("File already exists: {}", filePathStr);
         }
     }
-    public void writeToHdfsUnique(String originalFileName, MultipartFile file,String title) throws IOException {
+    public void writeToHdfsUnique(String originalFileName, MultipartFile file,String title, List<String> authors) throws IOException {
         String uniqueFilePathStr = "/user/hadoop/inputs/" + UUID.randomUUID().toString() + "_" + originalFileName;
         Path filePath = new Path(uniqueFilePathStr);
         try (FSDataOutputStream outputStream = fileSystem.create(filePath)) {
@@ -72,6 +72,7 @@ public class HdfsDirectService {
             hdfsFileModel.setFilePath(uniqueFilePathStr);
             hdfsFileModel.setFileSize(file.getSize());
             hdfsFileModel.setTitle(title);
+            hdfsFileModel.setAuthors(authors);
             // Add other metadata fields as needed
             hdfsFileRepository.save(hdfsFileModel);
             logger.info("Successfully written to HDFS file: {}", uniqueFilePathStr);

@@ -37,9 +37,10 @@ public class HdfsDirectController {
     @PostMapping("/upload")
     public String uploadFile(@RequestParam String originalFileName,
                              @RequestParam("file") MultipartFile file,
-                             @RequestParam String title) {
+                             @RequestParam String title,
+                             @RequestParam List<String> authors) {
         try{
-            hdfsDirectService.writeToHdfsUnique(originalFileName,file,title);
+            hdfsDirectService.writeToHdfsUnique(originalFileName,file,title,authors);
             return "Successfully written to HDFS.";
         } catch (IOException e) {
             return "Error uploading to HDFS: " + e.getMessage();
