@@ -2,38 +2,40 @@ package com.unik.hadoopcontroller.config;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.sql.SparkSession;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 
 @Configuration
 public class SparkConfig {
 
-    @Value("${spark.master}")
-    private String sparkMaster;
+    @Value("${spring.hadoop.fsUri}")
+    private String fsUri;
 
     @Value("${spark.app.name}")
-    private String sparkAppName;
+    private String appName;
+
+    @Value("${spark.master}")
+    private String master;
+
+    @Value("${spark.deploymode}")
+    private String deployMode;
 
     @Bean
-    public JavaSparkContext javaSparkContext() {
+    public SparkConf sparkConf() {
         SparkConf sparkConf = new SparkConf()
-                .setAppName(sparkAppName)
-                .setMaster(sparkMaster);
-        return new JavaSparkContext(sparkConf);
+                .setAppName(appName)
+                .setMaster(master);
+        // Set Hadoop configuration in SparkConf
+        sparkConf.set("fs.defaultFS", fsUri);
+        sparkConf.set("spark.submit.deployMode", deployMode);
+        sparkConf.set("spark.logConf", "true");
+        return sparkConf;
     }
 
     @Bean
-    public SparkSession sparkSession(JavaSparkContext javaSparkContext) {
-        SparkSession sparkSession = SparkSession.builder()
-                .sparkContext(javaSparkContext.sc())
-                .getOrCreate();
-
-        // Register a shutdown hook to close SparkContext when the application exits
-        Runtime.getRuntime().addShutdownHook(new Thread(javaSparkContext::stop));
-
-        return sparkSession;
+    public JavaSparkContext javaSparkContext() {
+        return new JavaSparkContext(sparkConf());
     }
 }

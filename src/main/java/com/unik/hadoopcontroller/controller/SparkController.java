@@ -12,34 +12,34 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 public class SparkController {
 
-    @Autowired
-    private SparkSession sparkSession;
-    private SparkService sparkService;
-
-    @RequestMapping("get-metadata")   // change to get format of json file stored in hdfs, get its content
-    public ResponseEntity<String> getMetadata() {
-        String hadoopFilePath = "hdfs://localhost:9000/User/Hadoop/sample"; // Provide the path to your metadata file !!!
-
-        // Read the metadata from Hadoop using Spark
-        Dataset<Row> metadataDF = sparkSession.read().format("parquet").load(hadoopFilePath);
-
-        // Example transformation
-        long rowCount = metadataDF.count();
-
-        String html = String.format("<h1>%s</h1>", "Running Spark") +
-                String.format("<h2>%s</h2>", "Spark version = " + sparkSession.sparkContext().version()) +
-                String.format("<h3>%s</h3>", "Read Metadata from Hadoop..") +
-                String.format("<h4>Total metadata records %d</h4>", rowCount) +
-                metadataDF.showString(20, 20, true);
-
-        return ResponseEntity.ok(html);
-    }
-
-
-    @PostMapping("submitJob")
-    public String submitJob(@RequestParam String scriptPath, @RequestBody SparkJobConfig config) {
-        return sparkService.submitJob(scriptPath, config);
-    }
+//    @Autowired
+//    private SparkSession sparkSession;
+//    private SparkService sparkService;
+//
+//    @RequestMapping("get-metadata")   // change to get format of json file stored in hdfs, get its content
+//    public ResponseEntity<String> getMetadata() {
+//        String hadoopFilePath = "hdfs://localhost:9000/User/Hadoop/sample"; // Provide the path to your metadata file !!!
+//
+//        // Read the metadata from Hadoop using Spark
+//        Dataset<Row> metadataDF = sparkSession.read().format("parquet").load(hadoopFilePath);
+//
+//        // Example transformation
+//        long rowCount = metadataDF.count();
+//
+//        String html = String.format("<h1>%s</h1>", "Running Spark") +
+//                String.format("<h2>%s</h2>", "Spark version = " + sparkSession.sparkContext().version()) +
+//                String.format("<h3>%s</h3>", "Read Metadata from Hadoop..") +
+//                String.format("<h4>Total metadata records %d</h4>", rowCount) +
+//                metadataDF.showString(20, 20, true);
+//
+//        return ResponseEntity.ok(html);
+//    }
+//
+//
+//    @PostMapping("submitJob")
+//    public String submitJob(@RequestParam String scriptPath, @RequestBody SparkJobConfig config) {
+//        return sparkService.submitJob(scriptPath, config);
+//    }
 
     // @RequestMapping("read-csv")
     // public ResponseEntity<String> getRowCount() {
