@@ -61,6 +61,22 @@ public class HdfsDirectService {
             logger.warn("File already exists: {}", filePathStr);
         }
     }
+
+    public void appendToHdfs(String filePathStr, String content) throws IOException {
+        Path filePath = new Path(filePathStr);
+        if (fileSystem.exists(filePath)) {
+            try (FSDataOutputStream outputStream = fileSystem.append(filePath)) {
+                outputStream.write(content.getBytes());
+                logger.info("Successfully appended to HDFS file: {}", filePathStr);
+            } catch (IOException e) {
+                logger.error("Error appending to HDFS", e);
+                throw e;
+            }
+        } else {
+            logger.warn("File does not exist: {}", filePathStr);
+            throw new IOException("File does not exist: " + filePathStr);
+        }
+    }
     public void writeToHdfsUnique(String originalFileName, MultipartFile file,String title, List<String> authors) throws IOException {
         String uniqueFilePathStr = "/user/hadoop/inputs/" + UUID.randomUUID().toString() + "_" + originalFileName;
         Path filePath = new Path(uniqueFilePathStr);

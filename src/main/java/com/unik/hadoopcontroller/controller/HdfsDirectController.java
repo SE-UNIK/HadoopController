@@ -47,6 +47,17 @@ public class HdfsDirectController {
         }
     }
 
+    @PostMapping("/append")
+    public String appendToFile(@RequestParam String path, @RequestParam String content) {
+        try {
+            hdfsDirectService.appendToHdfs(path, content);
+            return "Successfully appended to HDFS.";
+        } catch (IOException e) {
+            return "Error appending to HDFS: " + e.getMessage();
+        }
+    }
+
+
     @DeleteMapping("/delete")
     public String deleteFile(@RequestParam String path) {
         try {
