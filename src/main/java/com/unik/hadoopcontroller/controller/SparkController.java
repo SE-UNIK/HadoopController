@@ -6,15 +6,15 @@ import org.apache.spark.sql.SparkSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 
-@RequestMapping("spark-context")
+@RequestMapping("/spark-context")
 @Controller
 public class SparkController {
 
     @Autowired
     private SparkSession sparkSession;
+    private SparkService sparkService;
 
     @RequestMapping("get-metadata")   // change to get format of json file stored in hdfs, get its content
     public ResponseEntity<String> getMetadata() {
@@ -33,6 +33,12 @@ public class SparkController {
                 metadataDF.showString(20, 20, true);
 
         return ResponseEntity.ok(html);
+    }
+
+
+    @PostMapping("submitJob")
+    public String submitJob(@RequestParam String scriptPath, @RequestBody SparkJobConfig config) {
+        return sparkService.submitJob(scriptPath, config);
     }
 
     // @RequestMapping("read-csv")

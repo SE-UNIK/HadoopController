@@ -27,13 +27,13 @@ public class SparkConfig {
 
     @Bean
     public SparkSession sparkSession(JavaSparkContext javaSparkContext) {
-        return SparkSession.builder()
+        SparkSession sparkSession = SparkSession.builder()
                 .sparkContext(javaSparkContext.sc())
                 .getOrCreate();
-    }
 
-    @Bean
-    public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
-        return new PropertySourcesPlaceholderConfigurer();
+        // Register a shutdown hook to close SparkContext when the application exits
+        Runtime.getRuntime().addShutdownHook(new Thread(javaSparkContext::stop));
+
+        return sparkSession;
     }
 }
