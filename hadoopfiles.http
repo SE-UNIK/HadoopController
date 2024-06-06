@@ -34,7 +34,7 @@ Content-Type: application/json
 
 {
   "inputPath": "/user/hadoop/inputs/alice.txt",
-  "outputPath": "/user/hadoop/analysis",
+  "outputPath": "/home/hadoop/analysis/output.txt",
   "algorithm": "wordcount.py"
 }
 
