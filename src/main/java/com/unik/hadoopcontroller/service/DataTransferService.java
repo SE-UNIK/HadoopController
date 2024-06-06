@@ -1,7 +1,6 @@
 package com.unik.hadoopcontroller.service;
 
 import com.unik.hadoopcontroller.model.MetadataModel;
-import com.unik.hadoopcontroller.repository.MetadataRepository;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
@@ -13,17 +12,12 @@ import org.apache.parquet.hadoop.ParquetReader;
 import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.util.HadoopInputFile;
 import org.apache.parquet.avro.AvroParquetReader;
-import org.apache.parquet.hadoop.metadata.ParquetMetadata;
-import org.apache.parquet.hadoop.ParquetFileReader;
-import org.apache.parquet.schema.MessageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,9 +37,6 @@ public class DataTransferService {
 
     @Autowired
     private MetadataService metadataService;
-
-    @Autowired
-    private HdfsFileModelService hdfsFileModelService;
 
     public void transferMetadataToParquet(List<String> ids) {
         String filePathStr = "/user/hadoop/metadata/metadataCollection.parquet";
@@ -111,27 +102,39 @@ public class DataTransferService {
         }
     }
 
-    public List<GenericRecord> readParquetFile() throws IOException {
+    public List<Map<String, Object>> readParquetFile() throws IOException {
         String filePathStr = "/user/hadoop/metadata/metadataCollection.parquet";
         Path filePath = new Path(filePathStr);
-
-        List<GenericRecord> records = new ArrayList<>();
+        List<Map<String, Object>> result = new ArrayList<>();
+        Schema schema = getAvroSchema();
 
         if (fileSystem.exists(filePath)) {
             try (ParquetReader<GenericRecord> reader = AvroParquetReader.<GenericRecord>builder(HadoopInputFile.fromPath(filePath, hadoopConfiguration)).build()) {
                 GenericRecord record;
                 while ((record = reader.read()) != null) {
-                    records.add(record);
+                    Map<String, Object> map = new HashMap<>();
+                    for (Schema.Field field : schema.getFields()) {
+                        Object value = record.get(field.name());
+                        if (value instanceof CharSequence) {
+                            value = value.toString();
+                        } else if (value instanceof GenericData.Array) {
+                            List<String> stringList = new ArrayList<>();
+                            for (Object item : (GenericData.Array<?>) value) {
+                                stringList.add(item.toString());
+                            }
+                            value = stringList;
+                        }
+                        map.put(field.name(), value);
+                    }
+                    result.add(map);
                 }
             } catch (IOException e) {
                 logger.error("Error reading Parquet file", e);
                 throw e;
             }
-        } else {
-            logger.warn("Parquet file does not exist: {}", filePathStr);
         }
 
-        return records;
+        return result;
     }
 
     private Schema getAvroSchema() {

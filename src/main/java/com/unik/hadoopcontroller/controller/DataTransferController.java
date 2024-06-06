@@ -1,7 +1,6 @@
 package com.unik.hadoopcontroller.controller;
 
 import com.unik.hadoopcontroller.service.DataTransferService;
-import org.apache.avro.generic.GenericRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,7 +27,7 @@ public class DataTransferController {
     }
 
     @GetMapping("/parquet")
-    public List<GenericRecord> readParquetFile() throws IOException {
+    public List<Map<String, Object>> readParquetFile() throws IOException {
         return dataTransferService.readParquetFile();
     }
 }
