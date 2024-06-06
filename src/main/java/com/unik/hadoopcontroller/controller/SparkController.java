@@ -1,15 +1,8 @@
 package com.unik.hadoopcontroller.controller;
 
-import com.unik.hadoopcontroller.model.HdfsFileModel;
 import com.unik.hadoopcontroller.model.SparkModel;
-import com.unik.hadoopcontroller.service.HdfsFileModelService;
 import com.unik.hadoopcontroller.service.SparkSubmitJobService;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SparkSession;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
@@ -23,9 +16,9 @@ public class SparkController {
     private SparkSubmitJobService sparkJobService;
 
     @PostMapping("/submit")
-    public String launchSparkJob(@RequestBody SparkModel sparkJobModel, @RequestParam String fileName, @RequestParam String filePath) { // change file type
+    public String launchSparkJob(@RequestBody SparkModel sparkJobModel, @RequestParam String fileName, @RequestParam String hdfsFilePath) { // change file type
         try {
-            File output = sparkJobService.launchSparkJob(sparkJobModel, fileName, filePath);
+            File output = sparkJobService.launchSparkJob(sparkJobModel, fileName, hdfsFilePath);
             return "Spark Job completed";
         } catch (Exception e) {
             return "Error doing job submission: " + e.getMessage();

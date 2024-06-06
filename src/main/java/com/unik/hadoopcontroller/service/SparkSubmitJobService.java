@@ -27,9 +27,12 @@ public class SparkSubmitJobService {
     //    private final SparkConf sparkConf;
 //    private final SparkModel sparkModel;
     private final String systemHadoopRootDir = "/home/hadoop";
-    private final String sparkAlgorithmsDir = systemHadoopRootDir + "/spark/algorithms/";
+    private final String systemSparkAlgorithmsDir = systemHadoopRootDir + "/spark/algorithms/";
+    private final String hdfsRootDir = "/user/hadoop/";
     @Autowired
     HdfsDirectService hdfsDirectService;
+	@Autowired
+	private SparkModel sparkModel;
     //String wordCountScript = sparkAlgorithmsDir + "wordcount.py";
     //String destination = "/user/hadoop/";
 
@@ -43,14 +46,16 @@ public class SparkSubmitJobService {
         fileOutputStream.close();
     }
 
-    public File launchSparkJob(SparkModel sparkJobModel, String fileName, String filePath) {
+    public File launchSparkJob(SparkModel sparkJobModel, String fileName, String hdfsFilePath) {
         try {
+            String inputFilePath =
+                    sparkJobModel.getInputDirectoryPath() + sparkJobModel.getInputFileName();
             Process spark = new SparkLauncher()
                     .setSparkHome(systemHadoopRootDir + "/spark")
-                    .setAppResource(sparkAlgorithmsDir + sparkJobModel.getAlgorithm())
+                    .setAppResource(systemSparkAlgorithmsDir + sparkJobModel.getAlgorithmName())
                     .setMaster("yarn")
                     .setDeployMode("cluster")
-                    .addAppArgs(systemHadoopRootDir + sparkJobModel.getInputPath())   // should receive parquet file
+                    .addAppArgs(inputFilePath)   // should receive parquet file
                     .setVerbose(true)
                     .launch();
 
@@ -59,16 +64,17 @@ public class SparkSubmitJobService {
             String title = fileName + "'s Analysis Results";
             String[] author = {"Sparky"};
             List<String> authors = Arrays.asList(author);
+            String systemOutputFilePath = "output" + analysisFileName;
 
-            File outputFile = new File("/home/hadoop/analysis/output.txt");
+            File outputFile = new File(systemOutputFilePath);
 
-            redirectOutput(spark.getInputStream(), sparkJobModel.getOutputPath());
+            redirectOutput(spark.getInputStream(), systemOutputFilePath);
             // redirectOutput(spark.getErrorStream(), sparkJobModel.getOutputPath());
 
             int exitCode = spark.waitFor();
             MultipartFile results = new CustomMultipartFile(outputFile);
 
-            hdfsDirectService.writeToHdfsUniqueWithFilePath(filePath,analysisFileName, results, title, authors);
+            hdfsDirectService.writeToHdfsUniqueWithFilePath(sparkModel.getOutputDirectoryPath(), analysisFileName, results, title, authors);
             System.out.println("Spark job finished with exit code: " + exitCode);
             return outputFile;
         } catch (IOException | InterruptedException e) {
