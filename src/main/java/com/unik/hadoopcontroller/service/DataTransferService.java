@@ -33,6 +33,9 @@ public class DataTransferService {
     @Autowired
     private FileSystem fileSystem;
 
+    @Autowired
+    private org.apache.hadoop.conf.Configuration hadoopConfiguration;
+
     @Value("${spring.hadoop.fsUri}")
     private String fsDefaultFS;
 
@@ -94,7 +97,7 @@ public class DataTransferService {
                 // Write to Parquet file
                 try (ParquetWriter<GenericRecord> writer = AvroParquetWriter.<GenericRecord>builder(filePath)
                         .withSchema(schema)
-                        .withConf(new Configuration())
+                        .withConf(hadoopConfiguration)
                         .build()) {
                     writer.write(newRecord);
                 }
