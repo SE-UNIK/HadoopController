@@ -36,16 +36,11 @@ public class DataTransferService {
     @Autowired
     private org.apache.hadoop.conf.Configuration hadoopConfiguration;
 
-    @Value("${spring.hadoop.fsUri}")
-    private String fsDefaultFS;
-
-
     @Autowired
     private MetadataService metadataService;
 
     @Autowired
     private HdfsFileModelService hdfsFileModelService;
-
 
     public void transferMetadataToParquet(String id) {
         String filePathStr = "/user/hadoop/metadata/metadataCollection.parquet";
@@ -58,7 +53,7 @@ public class DataTransferService {
                 // Check if file exists
                 if (fileSystem.exists(filePath)) {
                     // Read existing Parquet file to check if ID already exists
-                    try (ParquetReader<GenericRecord> reader = AvroParquetReader.<GenericRecord>builder(HadoopInputFile.fromPath(filePath, new Configuration())).build()) {
+                    try (ParquetReader<GenericRecord> reader = AvroParquetReader.<GenericRecord>builder(HadoopInputFile.fromPath(filePath, hadoopConfiguration)).build()) {
                         GenericRecord record;
                         while ((record = reader.read()) != null) {
                             if (record.get("id").toString().equals(id)) {
