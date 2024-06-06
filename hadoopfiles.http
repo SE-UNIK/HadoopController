@@ -30,3 +30,7 @@ Accept: application/json
 ### Test HDFS Reader Service
 GET http://localhost:8080/files/read?path=/user/hadoop/inputs/ef412f4f-157b-4f05-a532-8b68bc45037f_hi.txt
 Accept: application/json
+
+
+### Test DataTransfer Service
+POST http://localhost:8080/data/transfer?path=/user/hadoop/metadata?directoryName=test&id=6655671fbb282653890e367f
