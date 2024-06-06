@@ -124,20 +124,12 @@ public class DataTransferService {
                     Map<String, Object> map = new HashMap<>();
                     for (Schema.Field field : schema.getFields()) {
                         Object value = record.get(field.name());
-                        if (value instanceof GenericData.Fixed) {
-                            value = new String(((GenericData.Fixed) value).bytes(), StandardCharsets.UTF_8);
-                        } else if (value instanceof GenericData.EnumSymbol) {
+                        if (value instanceof CharSequence) {
                             value = value.toString();
-                        } else if (value instanceof byte[]) {
-                            value = new String((byte[]) value, StandardCharsets.UTF_8);
                         } else if (value instanceof GenericData.Array) {
                             List<String> decodedList = new ArrayList<>();
                             for (Object item : (GenericData.Array<?>) value) {
-                                if (item instanceof byte[]) {
-                                    decodedList.add(new String((byte[]) item, StandardCharsets.UTF_8));
-                                } else {
-                                    decodedList.add(item.toString());
-                                }
+                                decodedList.add(item.toString());
                             }
                             value = decodedList;
                         }
@@ -166,9 +158,5 @@ public class DataTransferService {
                 + "  {\"name\":\"content\", \"type\":\"string\"}"
                 + "]}";
         return new Schema.Parser().parse(schemaJson);
-    }
-
-    public void processJson(String collectionName) {
-        // Implementation for processing JSON
     }
 }
