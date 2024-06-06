@@ -14,10 +14,11 @@ public class DataTransferController {
     @Autowired
     private DataTransferService dataTransferService;
 
+
     @PostMapping("/transfer")
-    public String transferMetadataToParquet(@RequestParam String directoryName, @RequestParam String id) {
+    public String transferMetadataToParquet(@RequestParam String id) {
         try {
-            dataTransferService.transferMetadataToParquet(directoryName, id);
+            dataTransferService.transferMetadataToParquet(id);
             return "Metadata successfully transferred to Parquet file.";
         } catch (Exception e) {
             return "Error transferring metadata to Parquet file: " + e.getMessage();

@@ -36,14 +36,16 @@ public class DataTransferService {
     @Value("${spring.hadoop.fsUri}")
     private String fsDefaultFS;
 
-    @Autowired
-    private MetadataRepository metadataRepository;
 
     @Autowired
     private MetadataService metadataService;
 
-    public void transferMetadataToParquet(String fileName, String id) {
-        String filePathStr = "/user/hadoop/metadata/" + fileName;
+    @Autowired
+    private HdfsFileModelService hdfsFileModelService;
+
+
+    public void transferMetadataToParquet(String id) {
+        String filePathStr = "/user/hadoop/metadata/metadataCollection.parquet";
         Path filePath = new Path(filePathStr);
 
         Optional<MetadataModel> metadataModel = metadataService.getMetadataById(id);
