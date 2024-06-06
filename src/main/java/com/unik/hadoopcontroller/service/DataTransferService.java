@@ -1,12 +1,21 @@
 package com.unik.hadoopcontroller.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.unik.hadoopcontroller.model.MetadataModel;
-import com.unik.hadoopcontroller.repository.HdfsFileRepository;
 import com.unik.hadoopcontroller.repository.MetadataRepository;
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.spark.sql.*;
+import org.apache.parquet.avro.AvroParquetWriter;
+import org.apache.parquet.hadoop.ParquetReader;
+import org.apache.parquet.hadoop.ParquetWriter;
+import org.apache.parquet.hadoop.util.HadoopInputFile;
+import org.apache.parquet.avro.AvroParquetReader;
+import org.apache.parquet.hadoop.metadata.ParquetMetadata;
+import org.apache.parquet.hadoop.ParquetFileReader;
+import org.apache.parquet.schema.MessageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,8 +23,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Optional;
 
 @Service
@@ -30,48 +37,68 @@ public class DataTransferService {
     private String fsDefaultFS;
 
     @Autowired
-    private MetadataService metadataService;
+    private MetadataRepository metadataRepository;
 
     @Autowired
-    private SparkSession sparkSession;
+    private MetadataService metadataService;
 
-    public void transferMetadataToParquet(String directoryName, String id) {
-        String directoryPathStr = "/user/hadoop/metadata/" + directoryName;
+    public void transferMetadataToParquet(String fileName, String id) {
+        String filePathStr = "/user/hadoop/metadata/" + fileName;
+        Path filePath = new Path(filePathStr);
+
         Optional<MetadataModel> metadataModel = metadataService.getMetadataById(id);
 
         if (metadataModel.isPresent()) {
             try {
-                Path directoryPath = new Path(directoryPathStr);
-
-                // Load existing Parquet file if it exists
-                Dataset<Row> existingData;
-                if (fileSystem.exists(directoryPath)) {
-                    existingData = sparkSession.read().parquet(directoryPathStr);
-                } else {
-                    existingData = sparkSession.createDataFrame(Collections.emptyList(), MetadataModel.class);
+                // Check if file exists
+                if (fileSystem.exists(filePath)) {
+                    // Read existing Parquet file to check if ID already exists
+                    try (ParquetReader<GenericRecord> reader = AvroParquetReader.<GenericRecord>builder(HadoopInputFile.fromPath(filePath, new Configuration())).build()) {
+                        GenericRecord record;
+                        while ((record = reader.read()) != null) {
+                            if (record.get("id").toString().equals(id)) {
+                                logger.warn("Metadata with ID {} already exists. Skipping write.", id);
+                                return;
+                            }
+                        }
+                    } catch (IOException e) {
+                        logger.error("Error reading existing Parquet file", e);
+                        return;
+                    }
                 }
 
-                // Check if the ID already exists
-                boolean idExists = !existingData.filter(functions.col("id").equalTo(id)).isEmpty();
+                // Define Avro schema
+                String schemaJson = "{"
+                        + "\"type\":\"record\","
+                        + "\"name\":\"MetadataModel\","
+                        + "\"fields\":["
+                        + "  {\"name\":\"id\", \"type\":\"string\"},"
+                        + "  {\"name\":\"title\", \"type\":\"string\"},"
+                        + "  {\"name\":\"publishDate\", \"type\":\"string\"},"
+                        + "  {\"name\":\"authors\", \"type\":{\"type\":\"array\", \"items\": \"string\"}},"
+                        + "  {\"name\":\"content\", \"type\":\"string\"}"
+                        + "]}";
+                Schema schema = new Schema.Parser().parse(schemaJson);
 
-                if (!idExists) {
-                    // Convert MetadataModel to Dataset<Row>
-                    MetadataModel model = metadataModel.get();
-                    Dataset<Row> newData = sparkSession.createDataFrame(Collections.singletonList(model), MetadataModel.class);
+                // Convert MetadataModel to GenericRecord
+                MetadataModel model = metadataModel.get();
+                GenericRecord newRecord = new GenericData.Record(schema);
+                newRecord.put("id", model.getId());
+                newRecord.put("title", model.getTitle());
+                newRecord.put("publishDate", model.getPublishDate().toString());
+                newRecord.put("authors", model.getAuthors());
+                newRecord.put("content", model.getContent());
 
-                    // Append new data to existing data
-                    Dataset<Row> updatedData = existingData.union(newData);
-
-                    // Write updated data to Parquet
-                    updatedData.write().mode("overwrite").parquet(directoryPathStr);
-
-                    logger.info("Successfully transferred metadata to HDFS Parquet file: {}", directoryPathStr);
-                } else {
-                    logger.info("Metadata with ID {} already exists. Skipping write.", id);
+                // Write to Parquet file
+                try (ParquetWriter<GenericRecord> writer = AvroParquetWriter.<GenericRecord>builder(filePath)
+                        .withSchema(schema)
+                        .withConf(new Configuration())
+                        .build()) {
+                    writer.write(newRecord);
                 }
+
+                logger.info("Successfully transferred metadata to HDFS Parquet file: {}", filePathStr);
             } catch (IOException e) {
-                logger.error("Error accessing HDFS", e);
-            } catch (Exception e) {
                 logger.error("Error transferring metadata to HDFS Parquet", e);
             }
         } else {
@@ -79,4 +106,7 @@ public class DataTransferService {
         }
     }
 
+    public void processJson(String collectionName) {
+        // Implementation for processing JSON
+    }
 }

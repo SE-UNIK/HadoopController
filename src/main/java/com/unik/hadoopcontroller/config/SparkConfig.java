@@ -55,12 +55,6 @@ public class SparkConfig {
 
 //        return sparkConf;
     }
-    @Bean
-    public SparkSession sparkSession(SparkConf sparkConf) {
-        return SparkSession.builder()
-                .config(sparkConf)
-                .getOrCreate();
-    }
 //    @Bean
 //    public JavaSparkContext javaSparkContext() {
 //        return new JavaSparkContext(sparkConf());
