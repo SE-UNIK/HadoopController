@@ -1,24 +1,32 @@
 package com.unik.hadoopcontroller.service;
 
 import com.unik.hadoopcontroller.model.MetadataModel;
+import com.unik.hadoopcontroller.repository.MetadataRepository;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.parquet.avro.AvroParquetReader;
 import org.apache.parquet.avro.AvroParquetWriter;
 import org.apache.parquet.hadoop.ParquetReader;
 import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.util.HadoopInputFile;
+import org.apache.parquet.avro.AvroParquetReader;
+import org.apache.parquet.hadoop.metadata.ParquetMetadata;
+import org.apache.parquet.hadoop.ParquetFileReader;
+import org.apache.parquet.schema.MessageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -30,10 +38,13 @@ public class DataTransferService {
     private FileSystem fileSystem;
 
     @Autowired
-    private org.apache.hadoop.conf.Configuration hadoopConfiguration;
+    private Configuration hadoopConfiguration;
 
     @Autowired
     private MetadataService metadataService;
+
+    @Autowired
+    private HdfsFileModelService hdfsFileModelService;
 
     public void transferMetadataToParquet(List<String> ids) {
         String filePathStr = "/user/hadoop/metadata/metadataCollection.parquet";
@@ -60,14 +71,14 @@ public class DataTransferService {
         }
 
         try {
-            List<GenericRecord> existingRecords = new ArrayList<>();
+            List<GenericRecord> records = new ArrayList<>();
 
             // Read existing records if the file exists
             if (fileSystem.exists(filePath)) {
                 try (ParquetReader<GenericRecord> reader = AvroParquetReader.<GenericRecord>builder(HadoopInputFile.fromPath(filePath, hadoopConfiguration)).build()) {
                     GenericRecord record;
                     while ((record = reader.read()) != null) {
-                        existingRecords.add(record);
+                        records.add(record);
                     }
                 } catch (IOException e) {
                     logger.error("Error reading existing Parquet file", e);
@@ -75,30 +86,53 @@ public class DataTransferService {
                 }
             }
 
-            // Write all records (existing + new) to a new Parquet file
+            // Add new records to the existing records
+            records.addAll(newRecords);
+
+            // Write all records to Parquet file
             Path tempFilePath = new Path(filePathStr + ".tmp");
             try (ParquetWriter<GenericRecord> writer = AvroParquetWriter.<GenericRecord>builder(tempFilePath)
                     .withSchema(schema)
                     .withConf(hadoopConfiguration)
                     .build()) {
-                for (GenericRecord rec : existingRecords) {
-                    writer.write(rec);
-                }
-                for (GenericRecord rec : newRecords) {
+                for (GenericRecord rec : records) {
                     writer.write(rec);
                 }
             }
 
             // Replace the old file with the new one
-            if (fileSystem.exists(filePath)) {
-                fileSystem.delete(filePath, false);
-            }
+            fileSystem.delete(filePath, false);
             fileSystem.rename(tempFilePath, filePath);
 
             logger.info("Successfully transferred metadata to HDFS Parquet file: {}", filePathStr);
         } catch (IOException e) {
             logger.error("Error transferring metadata to HDFS Parquet", e);
         }
+    }
+
+    public List<Map<String, Object>> readParquetFile() throws IOException {
+        String filePathStr = "/user/hadoop/metadata/metadataCollection.parquet";
+        Path filePath = new Path(filePathStr);
+        List<Map<String, Object>> result = new ArrayList<>();
+        Schema schema = getAvroSchema();
+
+        if (fileSystem.exists(filePath)) {
+            try (ParquetReader<GenericRecord> reader = AvroParquetReader.<GenericRecord>builder(HadoopInputFile.fromPath(filePath, hadoopConfiguration)).build()) {
+                GenericRecord record;
+                while ((record = reader.read()) != null) {
+                    Map<String, Object> map = new HashMap<>();
+                    for (Schema.Field field : schema.getFields()) {
+                        map.put(field.name(), record.get(field.name()));
+                    }
+                    result.add(map);
+                }
+            } catch (IOException e) {
+                logger.error("Error reading Parquet file", e);
+                throw e;
+            }
+        }
+
+        return result;
     }
 
     private Schema getAvroSchema() {
@@ -115,26 +149,7 @@ public class DataTransferService {
         return new Schema.Parser().parse(schemaJson);
     }
 
-        public List<GenericRecord> readParquetFile() throws IOException {
-        String filePathStr = "/user/hadoop/metadata/metadataCollection.parquet";
-        Path filePath = new Path(filePathStr);
-
-        List<GenericRecord> records = new ArrayList<>();
-
-        if (fileSystem.exists(filePath)) {
-            try (ParquetReader<GenericRecord> reader = AvroParquetReader.<GenericRecord>builder(HadoopInputFile.fromPath(filePath, hadoopConfiguration)).build()) {
-                GenericRecord record;
-                while ((record = reader.read()) != null) {
-                    records.add(record);
-                }
-            } catch (IOException e) {
-                logger.error("Error reading Parquet file", e);
-                throw e;
-            }
-        } else {
-            logger.warn("Parquet file does not exist: {}", filePathStr);
-        }
-
-        return records;
+    public void processJson(String collectionName) {
+        // Implementation for processing JSON
     }
 }
