@@ -74,7 +74,7 @@ public class SparkSubmitJobService {
             int exitCode = spark.waitFor();
             MultipartFile results = new CustomMultipartFile(outputFile);
 
-            hdfsDirectService.writeToHdfsUniqueWithFilePath(sparkModel.getOutputDirectoryPath(), analysisFileName, results, title, authors);
+            hdfsDirectService.writeToHdfsUniqueWithFilePath(sparkJobModel.getOutputDirectoryPath(), analysisFileName, results, title, authors);
             System.out.println("Spark job finished with exit code: " + exitCode);
             return outputFile;
         } catch (IOException | InterruptedException e) {

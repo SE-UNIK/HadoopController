@@ -18,7 +18,7 @@ public class SparkController {
     @PostMapping("/submit")
     public String launchSparkJob(@RequestBody SparkModel sparkJobModel, @RequestParam String fileName, @RequestParam String hdfsFilePath) { // change file type
         try {
-            File output = sparkJobService.launchSparkJob(sparkJobModel, fileName, hdfsFilePath);
+            File output = sparkJobService.launchSparkJob(sparkJobModel, fileName);
             return "Spark Job completed";
         } catch (Exception e) {
             return "Error doing job submission: " + e.getMessage();

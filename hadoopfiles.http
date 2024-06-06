@@ -28,13 +28,12 @@ Accept: application/json
 
 
 ### Test Spark Job Submission
-POST http://localhost:8080/spark/submit?fileName=alice.txt&hdfsFilePath=/user
-    /hadoop/analysis/
+POST http://localhost:8080/spark/submit?fileName=alice.txt&hdfsFilePath=/user/hadoop/analysis/
 Content-Type: application/json
 
 {
   "inputDirectoryPath": "/user/hadoop/inputs/",
-  "inputFileName": "alice.txt"
+  "inputFileName": "alice.txt",
   "outputDirectoryPath": "/user/hadoop/analysis/",
   "algorithmName": "wordcount.py"
 }
