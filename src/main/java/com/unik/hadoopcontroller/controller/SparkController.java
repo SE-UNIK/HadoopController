@@ -23,9 +23,16 @@ public class SparkController {
     private SparkSubmitJobService sparkJobService;
 
     @PostMapping("/submit")
-    public void launchSparkJob(@RequestBody SparkModel sparkJobModel) { // change file type
-        File output = sparkJobService.launchSparkJob(sparkJobModel);
+    public String launchSparkJob(@RequestBody SparkModel sparkJobModel, @RequestParam String fileName, @RequestParam String filePath) { // change file type
+        try {
+            File output = sparkJobService.launchSparkJob(sparkJobModel, fileName, filePath);
+            return "Spark Job completed";
+        } catch (Exception e) {
+            return "Error doing job submission: " + e.getMessage();
+        }
     }
+
+
 
     // @RequestMapping("read-csv")
     // public ResponseEntity<String> getRowCount() {
