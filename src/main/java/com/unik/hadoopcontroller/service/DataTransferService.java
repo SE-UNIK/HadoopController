@@ -111,39 +111,27 @@ public class DataTransferService {
         }
     }
 
-    public List<Map<String, Object>> readParquetFile() throws IOException {
+    public List<GenericRecord> readParquetFile() throws IOException {
         String filePathStr = "/user/hadoop/metadata/metadataCollection.parquet";
         Path filePath = new Path(filePathStr);
-        List<Map<String, Object>> result = new ArrayList<>();
-        Schema schema = getAvroSchema();
+
+        List<GenericRecord> records = new ArrayList<>();
 
         if (fileSystem.exists(filePath)) {
             try (ParquetReader<GenericRecord> reader = AvroParquetReader.<GenericRecord>builder(HadoopInputFile.fromPath(filePath, hadoopConfiguration)).build()) {
                 GenericRecord record;
                 while ((record = reader.read()) != null) {
-                    Map<String, Object> map = new HashMap<>();
-                    for (Schema.Field field : schema.getFields()) {
-                        Object value = record.get(field.name());
-                        if (value instanceof CharSequence) {
-                            value = value.toString();
-                        } else if (value instanceof GenericData.Array) {
-                            List<String> stringList = new ArrayList<>();
-                            for (Object item : (GenericData.Array<?>) value) {
-                                stringList.add(item.toString());
-                            }
-                            value = stringList;
-                        }
-                        map.put(field.name(), value);
-                    }
-                    result.add(map);
+                    records.add(record);
                 }
             } catch (IOException e) {
                 logger.error("Error reading Parquet file", e);
                 throw e;
             }
+        } else {
+            logger.warn("Parquet file does not exist: {}", filePathStr);
         }
 
-        return result;
+        return records;
     }
 
     private Schema getAvroSchema() {

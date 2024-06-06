@@ -28,7 +28,7 @@ public class DataTransferController {
     }
 
     @GetMapping("/parquet")
-    public List<Map<String, Object>> readParquetFile() throws IOException {
+    public List<GenericRecord> readParquetFile() throws IOException {
         return dataTransferService.readParquetFile();
     }
 }
