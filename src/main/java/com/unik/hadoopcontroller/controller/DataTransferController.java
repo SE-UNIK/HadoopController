@@ -4,7 +4,7 @@ import com.unik.hadoopcontroller.service.DataTransferService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
+import java.util.List;
 
 @RequestMapping("/data")
 @CrossOrigin(origins = "http://localhost:8081")
@@ -14,15 +14,13 @@ public class DataTransferController {
     @Autowired
     private DataTransferService dataTransferService;
 
-
     @PostMapping("/transfer")
-    public String transferMetadataToParquet(@RequestParam String id) {
+    public String transferMetadataToParquet(@RequestBody List<String> ids) {
         try {
-            dataTransferService.transferMetadataToParquet(id);
+            dataTransferService.transferMetadataToParquet(ids);
             return "Metadata successfully transferred to Parquet file.";
         } catch (Exception e) {
             return "Error transferring metadata to Parquet file: " + e.getMessage();
         }
     }
-
 }

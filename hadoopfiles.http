@@ -75,5 +75,11 @@ DELETE http://localhost:8080/api/file/
 
 
 ### Test Data Transfer Service
-POST http://localhost:8080/data/transfer?id=6655671fbb282653890e367f
+POST http://localhost:8080/data/transfer
 Content-Type: application/x-www-form-urlencoded
+
+[
+  "6655671fbb282653890e367f",
+  "665c506e9544eb5462c6ebff",
+  "665c506e9544eb5462c6ebff"
+]
