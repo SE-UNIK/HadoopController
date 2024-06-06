@@ -114,4 +114,27 @@ public class DataTransferService {
                 + "]}";
         return new Schema.Parser().parse(schemaJson);
     }
+
+        public List<GenericRecord> readParquetFile() throws IOException {
+        String filePathStr = "/user/hadoop/metadata/metadataCollection.parquet";
+        Path filePath = new Path(filePathStr);
+
+        List<GenericRecord> records = new ArrayList<>();
+
+        if (fileSystem.exists(filePath)) {
+            try (ParquetReader<GenericRecord> reader = AvroParquetReader.<GenericRecord>builder(HadoopInputFile.fromPath(filePath, hadoopConfiguration)).build()) {
+                GenericRecord record;
+                while ((record = reader.read()) != null) {
+                    records.add(record);
+                }
+            } catch (IOException e) {
+                logger.error("Error reading Parquet file", e);
+                throw e;
+            }
+        } else {
+            logger.warn("Parquet file does not exist: {}", filePathStr);
+        }
+
+        return records;
+    }
 }

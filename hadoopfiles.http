@@ -83,3 +83,7 @@ Content-Type: application/json
   "665c506e9544eb5462c6ebff",
   "665f43af449228603da9c171"
 ]
+
+### Test Data Transfer Service - Read Parquet File
+GET http://localhost:8080/data/parquet
+Accept: application/json

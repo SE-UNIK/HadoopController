@@ -3,7 +3,8 @@ package com.unik.hadoopcontroller.controller;
 import com.unik.hadoopcontroller.service.DataTransferService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericRecord;
 import java.util.List;
 
 @RequestMapping("/data")
@@ -21,6 +22,15 @@ public class DataTransferController {
             return "Metadata successfully transferred to Parquet file.";
         } catch (Exception e) {
             return "Error transferring metadata to Parquet file: " + e.getMessage();
+        }
+    }
+    @GetMapping("/parquet")
+    public List<GenericRecord> readParquetFile() {
+        try {
+            return dataTransferService.readParquetFile();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
     }
 }
