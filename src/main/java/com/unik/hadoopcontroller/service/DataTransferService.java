@@ -145,6 +145,7 @@ public class DataTransferService {
         return result;
     }
 
+
     private Schema getAvroSchema() {
         String schemaJson = "{"
                 + "\"type\":\"record\","
