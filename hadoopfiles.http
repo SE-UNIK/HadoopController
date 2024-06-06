@@ -37,6 +37,3 @@ Content-Type: application/json
   "outputDirectoryPath": "/user/hadoop/analysis/",
   "algorithmName": "wordcount.py"
 }
-
-
-
