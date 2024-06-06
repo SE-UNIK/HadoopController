@@ -1,24 +1,39 @@
 package com.unik.hadoopcontroller.service;
 
+import com.unik.hadoopcontroller.CustomMultipartFile;
+import com.unik.hadoopcontroller.model.HdfsFileModel;
 import com.unik.hadoopcontroller.model.SparkModel;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.apache.spark.launcher.SparkLauncher;
 import org.apache.spark.SparkConf;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.List;
+
+/*
+* using SparkLauncher instead of SparkSubmit as SparkLauncher is a process so we can track its stdout
+* only need to provide PATHs of input file(s) [from hdfs] and pyspark algorithm(s) [from spark dir], and output file [to hdfs]
+* launch spark -> redirect output results to be saved in a file then stored in hdfs            OR change type to hdfsfilemodel and use post method to store to hdfs??
+* -->> change output path to set to a new file create right before redirect method and pass new file path for getting output
+* */
+
 
 @Service
 public class SparkSubmitJobService {
-//    private final SparkConf sparkConf;
+    //    private final SparkConf sparkConf;
 //    private final SparkModel sparkModel;
-    String hadoopRootDir = "/user/hadoop";
-    String sparkAlgorithmsDir = hadoopRootDir + "/spark/algorithms";
-    String wordCountScript = sparkAlgorithmsDir + "/wordcount.py";
-    String destination = "/user/hadoop/";
+    private final String hadoopRootDir = "/user/hadoop";
+    private final String sparkAlgorithmsDir = hadoopRootDir + "/spark/algorithms/";
+    @Autowired
+    HdfsDirectService hdfsDirectService;
+    //String wordCountScript = sparkAlgorithmsDir + "wordcount.py";
+    //String destination = "/user/hadoop/";
 
     private void redirectOutput(InputStream inputStream, String filePath) throws IOException {
         FileOutputStream fileOutputStream = new FileOutputStream(new File(filePath));
@@ -30,48 +45,39 @@ public class SparkSubmitJobService {
         fileOutputStream.close();
     }
 
-    public void launchSparkJob(SparkModel sparkJobModel) {
+    public File launchSparkJob(SparkModel sparkJobModel, String fileName, String filePath) {
         try {
             Process spark = new SparkLauncher()
-                    .setAppResource(sparkJobModel.getAlgorithm())
+                    .setSparkHome(hadoopRootDir + "/spark")
+                    .setAppResource(sparkAlgorithmsDir + sparkJobModel.getAlgorithm())
                     .setMaster("yarn")
                     .setDeployMode("cluster")
-                    .addAppArgs(sparkJobModel.getInputPath())
+                    .addAppArgs(hadoopRootDir + sparkJobModel.getInputPath())   // should receive parquet file
                     .setVerbose(true)
                     .launch();
 
-            redirectOutput(spark.getInputStream(), sparkJobModel.getOutputPath() + "/spark_job_output.log");
-            redirectOutput(spark.getErrorStream(), sparkJobModel.getOutputPath() + "/spark_job_error.log");
+            // create new file here to pass to redirectOutput path
+            String analysisFileName = fileName + "_analysis_results";
+            String title = fileName + "'s Analysis Results";
+            String[] author = {"Sparky"};
+            List<String> authors = Arrays.asList(author);
+
+            File outputFile = new File(sparkJobModel.getOutputPath());
+            MultipartFile results = new CustomMultipartFile(outputFile);
+
+            redirectOutput(spark.getInputStream(), sparkJobModel.getOutputPath());
+            // redirectOutput(spark.getErrorStream(), sparkJobModel.getOutputPath());
 
             int exitCode = spark.waitFor();
+
+            hdfsDirectService.writeToHdfsUniqueWithFilePath(filePath,analysisFileName, results, title, authors);
             System.out.println("Spark job finished with exit code: " + exitCode);
+            return outputFile;
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
+            System.out.println("Spark job was not finished successfully.");
+            return null;
         }
     }
-
-//    public String buildSparkCommand() {
-//        // Extract attributes from SparkModel
-//        String inputPath = sparkModel.getInputPath();
-//        String outputPath = sparkModel.getOutputPath();
-//        List<String> algorithms = sparkModel.getAlgorithm();
-//
-//        // Construct Spark command based on user inputs
-//        StringBuilder commandBuilder = new StringBuilder("spark-submit");
-//        commandBuilder.append(" --master ").append(sparkConf.get("spark.master"));
-//        commandBuilder.append(" --deploy-mode ").append(sparkConf.get("spark.deploy.mode"));
-//        commandBuilder.append(sparkConf.get("algorithm"));
-////        for (String algorithm : algorithms) {
-////            commandBuilder.append(" ").append(algorithm);
-////        }
-//        commandBuilder.append(" ").append(inputPath).append(" ").append(outputPath);
-//
-//        return commandBuilder.toString();
-//    }
-
-//    public void submitSparkJob() {
-//
-//    }
-
 
 }

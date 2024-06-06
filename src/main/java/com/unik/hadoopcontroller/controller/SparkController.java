@@ -12,8 +12,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
+
 @RestController
-@RequestMapping("/api/spark")
+@RequestMapping("/spark")
 @CrossOrigin(origins = "http://localhost:8081")
 public class SparkController {
 
@@ -21,8 +23,8 @@ public class SparkController {
     private SparkSubmitJobService sparkJobService;
 
     @PostMapping("/submit")
-    public void submitSparkJob(@RequestBody SparkModel sparkJobModel) {
-        sparkJobService.launchSparkJob(sparkJobModel);
+    public void launchSparkJob(@RequestBody SparkModel sparkJobModel) { // change file type
+        File output = sparkJobService.launchSparkJob(sparkJobModel);
     }
 
     // @RequestMapping("read-csv")

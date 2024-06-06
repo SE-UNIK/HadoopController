@@ -97,6 +97,26 @@ public class HdfsDirectService {
             throw e;
         }
     }
+    public void writeToHdfsUniqueWithFilePath(String filePath,String originalFileName, MultipartFile file,String title, List<String> authors) throws IOException {
+        String uniqueFilePathStr = filePath + UUID.randomUUID().toString() + "_" + originalFileName;
+        Path filePaths = new Path(uniqueFilePathStr);
+        try (FSDataOutputStream outputStream = fileSystem.create(filePaths)) {
+            outputStream.write(file.getBytes());
+            // Save the file metadata to MongoDB
+            HdfsFileModel hdfsFileModel = new HdfsFileModel();
+            hdfsFileModel.setFileName(originalFileName);
+            hdfsFileModel.setFilePath(uniqueFilePathStr);
+            hdfsFileModel.setFileSize(file.getSize());
+            hdfsFileModel.setTitle(title);
+            hdfsFileModel.setAuthors(authors);
+            // Add other metadata fields as needed
+            hdfsFileRepository.save(hdfsFileModel);
+            logger.info("Successfully written to HDFS file: {}", uniqueFilePathStr);
+        } catch (IOException e) {
+            logger.error("Error writing to HDFS", e);
+            throw e;
+        }
+    }
 
     public boolean deleteFile(String filePathStr) throws IOException {
         Path filePath = new Path(filePathStr);
