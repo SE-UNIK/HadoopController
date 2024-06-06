@@ -46,7 +46,7 @@ public class SparkSubmitJobService {
         fileOutputStream.close();
     }
 
-    public File launchSparkJob(SparkModel sparkJobModel, String fileName, String hdfsFilePath) {
+    public File launchSparkJob(SparkModel sparkJobModel, String fileName) {
         try {
             String inputFilePath =
                     sparkJobModel.getInputDirectoryPath() + sparkJobModel.getInputFileName();
@@ -60,11 +60,11 @@ public class SparkSubmitJobService {
                     .launch();
 
             // create new file here to pass to redirectOutput path
-            String analysisFileName = fileName + "_analysis_results";
+            String analysisFileName = "analysis_results_" + fileName;
             String title = fileName + "'s Analysis Results";
             String[] author = {"Sparky"};
             List<String> authors = Arrays.asList(author);
-            String systemOutputFilePath = "output" + analysisFileName;
+            String systemOutputFilePath = "output/" + analysisFileName;
 
             File outputFile = new File(systemOutputFilePath);
 
