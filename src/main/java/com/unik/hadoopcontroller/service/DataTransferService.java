@@ -127,11 +127,11 @@ public class DataTransferService {
                         if (value instanceof CharSequence) {
                             value = value.toString();
                         } else if (value instanceof GenericData.Array) {
-                            List<String> decodedList = new ArrayList<>();
+                            List<String> stringList = new ArrayList<>();
                             for (Object item : (GenericData.Array<?>) value) {
-                                decodedList.add(item.toString());
+                                stringList.add(item.toString());
                             }
-                            value = decodedList;
+                            value = stringList;
                         }
                         map.put(field.name(), value);
                     }
@@ -140,6 +140,26 @@ public class DataTransferService {
             } catch (IOException e) {
                 logger.error("Error reading Parquet file", e);
                 throw e;
+            }
+        }
+
+        // Manually process the authors field to decode it
+        for (Map<String, Object> record : result) {
+            if (record.containsKey("authors") && record.get("authors") instanceof List) {
+                List<?> authorsList = (List<?>) record.get("authors");
+                List<String> decodedAuthors = new ArrayList<>();
+                for (Object author : authorsList) {
+                    if (author instanceof Map) {
+                        Map<?, ?> authorMap = (Map<?, ?>) author;
+                        if (authorMap.containsKey("bytes")) {
+                            byte[] bytes = (byte[]) authorMap.get("bytes");
+                            decodedAuthors.add(new String(bytes, StandardCharsets.UTF_8));
+                        }
+                    } else if (author instanceof String) {
+                        decodedAuthors.add((String) author);
+                    }
+                }
+                record.put("authors", decodedAuthors);
             }
         }
 
