@@ -11,20 +11,19 @@ import java.util.List;
 @Component
 public class SparkModel {
 
-    @Id
-    private String id;
+//    @Id
+//    private String id;
     private String inputPath;
     private String outputPath;
-    private List<String> algorithm;
-    private Dataset<Row> results;
+    private String algorithm;                  // List<String>
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
+//    public String getId() {
+//        return id;
+//    }
+//
+//    public void setId(String id) {
+//        this.id = id;
+//    }
 
     public String getInputPath() {
         return inputPath;
@@ -42,20 +41,12 @@ public class SparkModel {
         this.outputPath = outputPath;
     }
 
-    public List<String> getAlgorithm() {
+    public String getAlgorithm() {
         return algorithm;
     }
 
-    public void setAlgorithm(List<String> algorithm) {
+    public void setAlgorithm(String algorithm) {
         this.algorithm = algorithm;
-    }
-
-    public Dataset<Row> getResults() {
-        return results;
-    }
-
-    public void setResults(Dataset<Row> results) {
-        this.results = results;
     }
 
 

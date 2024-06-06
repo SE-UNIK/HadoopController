@@ -30,30 +30,19 @@ public class SparkSubmitJobService {
         fileOutputStream.close();
     }
 
-    public void launchSparkJob(String [] sparkArgs) {
+    public void launchSparkJob(SparkModel sparkJobModel) {
         try {
-            // Set the path to the Spark installation directory
-            String sparkHome = sparkAlgorithmsDir;
-
-            // Create a SparkLauncher instance
-            Process spark = new SparkLauncher()     // can try to modify file on
-                    .setSparkHome(sparkHome)
-                    .setAppResource(wordCountScript)
-//                    .setMainClass("your.spark.MainClass")
-                    .setMaster("yarn") // Set the master URL
+            Process spark = new SparkLauncher()
+                    .setAppResource(sparkJobModel.getAlgorithm())
+                    .setMaster("yarn")
                     .setDeployMode("cluster")
-                    .addAppArgs(sparkArgs)
-                    .setVerbose(true) // Enable verbose output
+                    .addAppArgs(sparkJobModel.getInputPath())
+                    .setVerbose(true)
                     .launch();
 
-            // Launch the Spark job
-//            Process spark = launcher.launch();
+            redirectOutput(spark.getInputStream(), sparkJobModel.getOutputPath() + "/spark_job_output.log");
+            redirectOutput(spark.getErrorStream(), sparkJobModel.getOutputPath() + "/spark_job_error.log");
 
-            // Redirect Spark's stdout to a file
-            redirectOutput(spark.getInputStream(), "spark_job_output.log");
-            redirectOutput(spark.getErrorStream(), "spark_job_error.log");
-
-            // Wait for the Spark job to finish
             int exitCode = spark.waitFor();
             System.out.println("Spark job finished with exit code: " + exitCode);
         } catch (IOException | InterruptedException e) {

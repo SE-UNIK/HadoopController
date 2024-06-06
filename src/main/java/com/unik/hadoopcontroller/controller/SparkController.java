@@ -1,5 +1,8 @@
 package com.unik.hadoopcontroller.controller;
 
+import com.unik.hadoopcontroller.model.HdfsFileModel;
+import com.unik.hadoopcontroller.model.SparkModel;
+import com.unik.hadoopcontroller.service.HdfsFileModelService;
 import com.unik.hadoopcontroller.service.SparkSubmitJobService;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -9,18 +12,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-@RequestMapping("/spark-context")
-@Controller
+@RestController
+@RequestMapping("/api/spark")
+@CrossOrigin(origins = "http://localhost:8081")
 public class SparkController {
 
     @Autowired
-    private SparkSubmitJobService sparkSubmitJobService;
+    private SparkSubmitJobService sparkJobService;
 
-    @GetMapping("/submitSparkJob")
-    public String submitSparkJob(@RequestParam String inputPath, @RequestParam String outputPath) {
-        String[] sparkArgs = {inputPath, outputPath};
-        sparkSubmitJobService.launchSparkJob(sparkArgs);
-        return "Spark job submitted successfully";
+    @PostMapping("/submit")
+    public void submitSparkJob(@RequestBody SparkModel sparkJobModel) {
+        sparkJobService.launchSparkJob(sparkJobModel);
     }
 
     // @RequestMapping("read-csv")
