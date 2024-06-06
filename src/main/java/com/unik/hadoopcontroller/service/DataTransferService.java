@@ -32,7 +32,7 @@ public class DataTransferService {
     @Autowired
     private MetadataService metadataService;
 
-
+    @Autowired
     private SparkSession sparkSession;
 
     public void transferMetadataToParquet(String directoryName, String id) {

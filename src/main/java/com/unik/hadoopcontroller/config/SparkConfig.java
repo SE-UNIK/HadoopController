@@ -2,6 +2,7 @@ package com.unik.hadoopcontroller.config;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.sql.SparkSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -54,7 +55,12 @@ public class SparkConfig {
 
 //        return sparkConf;
     }
-
+    @Bean
+    public SparkSession sparkSession(SparkConf sparkConf) {
+        return SparkSession.builder()
+                .config(sparkConf)
+                .getOrCreate();
+    }
 //    @Bean
 //    public JavaSparkContext javaSparkContext() {
 //        return new JavaSparkContext(sparkConf());
