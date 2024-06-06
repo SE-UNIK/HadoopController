@@ -18,9 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +54,11 @@ public class DataTransferService {
                 newRecord.put("id", model.getId());
                 newRecord.put("title", model.getTitle());
                 newRecord.put("publishDate", model.getPublishDate().toString());
-                newRecord.put("authors", new GenericData.Array<>(schema.getField("authors").schema(), model.getAuthors()));
+
+                // Convert authors to GenericData.Array
+                GenericData.Array<String> authorsArray = new GenericData.Array<>(schema.getField("authors").schema(), model.getAuthors());
+                newRecord.put("authors", authorsArray);
+
                 newRecord.put("content", model.getContent());
                 newRecords.add(newRecord);
             } else {
@@ -122,14 +124,7 @@ public class DataTransferService {
                         } else if (value instanceof GenericData.Array) {
                             List<String> stringList = new ArrayList<>();
                             for (Object item : (GenericData.Array<?>) value) {
-                                if (item instanceof Map) {
-                                    Map<?, ?> itemMap = (Map<?, ?>) item;
-                                    byte[] bytes = (byte[]) itemMap.get("bytes");
-                                    String decodedString = new String(Base64.getDecoder().decode(bytes), StandardCharsets.UTF_8);
-                                    stringList.add(decodedString);
-                                } else {
-                                    stringList.add(item.toString());
-                                }
+                                stringList.add(item.toString());
                             }
                             value = stringList;
                         }
