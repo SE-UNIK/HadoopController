@@ -1,5 +1,6 @@
 package com.unik.hadoopcontroller.controller;
 
+import com.unik.hadoopcontroller.service.SparkSubmitJobService;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -12,34 +13,15 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 public class SparkController {
 
-//    @Autowired
-//    private SparkSession sparkSession;
-//    private SparkService sparkService;
-//
-//    @RequestMapping("get-metadata")   // change to get format of json file stored in hdfs, get its content
-//    public ResponseEntity<String> getMetadata() {
-//        String hadoopFilePath = "hdfs://localhost:9000/User/Hadoop/sample"; // Provide the path to your metadata file !!!
-//
-//        // Read the metadata from Hadoop using Spark
-//        Dataset<Row> metadataDF = sparkSession.read().format("parquet").load(hadoopFilePath);
-//
-//        // Example transformation
-//        long rowCount = metadataDF.count();
-//
-//        String html = String.format("<h1>%s</h1>", "Running Spark") +
-//                String.format("<h2>%s</h2>", "Spark version = " + sparkSession.sparkContext().version()) +
-//                String.format("<h3>%s</h3>", "Read Metadata from Hadoop..") +
-//                String.format("<h4>Total metadata records %d</h4>", rowCount) +
-//                metadataDF.showString(20, 20, true);
-//
-//        return ResponseEntity.ok(html);
-//    }
-//
-//
-//    @PostMapping("submitJob")
-//    public String submitJob(@RequestParam String scriptPath, @RequestBody SparkJobConfig config) {
-//        return sparkService.submitJob(scriptPath, config);
-//    }
+    @Autowired
+    private SparkSubmitJobService sparkSubmitJobService;
+
+    @GetMapping("/submitSparkJob")
+    public String submitSparkJob(@RequestParam String inputPath, @RequestParam String outputPath) {
+        String[] sparkArgs = {inputPath, outputPath};
+        sparkSubmitJobService.launchSparkJob(sparkArgs);
+        return "Spark job submitted successfully";
+    }
 
     // @RequestMapping("read-csv")
     // public ResponseEntity<String> getRowCount() {

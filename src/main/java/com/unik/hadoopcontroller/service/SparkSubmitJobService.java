@@ -2,21 +2,65 @@ package com.unik.hadoopcontroller.service;
 
 import com.unik.hadoopcontroller.model.SparkModel;
 import org.springframework.stereotype.Service;
-import org.apache.spark.deploy.SparkSubmit;
+import org.apache.spark.launcher.SparkLauncher;
 import org.apache.spark.SparkConf;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 @Service
 public class SparkSubmitJobService {
 //    private final SparkConf sparkConf;
 //    private final SparkModel sparkModel;
-//
-//    public SparkSubmitJobService(SparkConf sparkConf, SparkModel sparkModel) {
-//        this.sparkConf = sparkConf;
-//        this.sparkModel = sparkModel;
-//    }
-//
+    String hadoopRootDir = "/user/hadoop";
+    String sparkAlgorithmsDir = hadoopRootDir + "/spark/algorithms";
+    String wordCountScript = sparkAlgorithmsDir + "/wordcount.py";
+    String destination = "/user/hadoop/";
+
+    private void redirectOutput(InputStream inputStream, String filePath) throws IOException {
+        FileOutputStream fileOutputStream = new FileOutputStream(new File(filePath));
+        byte[] buffer = new byte[1024];
+        int length;
+        while ((length = inputStream.read(buffer)) != -1) {
+            fileOutputStream.write(buffer, 0, length);
+        }
+        fileOutputStream.close();
+    }
+
+    public void launchSparkJob(String [] sparkArgs) {
+        try {
+            // Set the path to the Spark installation directory
+            String sparkHome = sparkAlgorithmsDir;
+
+            // Create a SparkLauncher instance
+            Process spark = new SparkLauncher()     // can try to modify file on
+                    .setSparkHome(sparkHome)
+                    .setAppResource(wordCountScript)
+//                    .setMainClass("your.spark.MainClass")
+                    .setMaster("yarn") // Set the master URL
+                    .setDeployMode("cluster")
+                    .addAppArgs(sparkArgs)
+                    .setVerbose(true) // Enable verbose output
+                    .launch();
+
+            // Launch the Spark job
+//            Process spark = launcher.launch();
+
+            // Redirect Spark's stdout to a file
+            redirectOutput(spark.getInputStream(), "spark_job_output.log");
+            redirectOutput(spark.getErrorStream(), "spark_job_error.log");
+
+            // Wait for the Spark job to finish
+            int exitCode = spark.waitFor();
+            System.out.println("Spark job finished with exit code: " + exitCode);
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
 //    public String buildSparkCommand() {
 //        // Extract attributes from SparkModel
 //        String inputPath = sparkModel.getInputPath();
@@ -35,16 +79,9 @@ public class SparkSubmitJobService {
 //
 //        return commandBuilder.toString();
 //    }
-//
+
 //    public void submitSparkJob() {
-//        String[] sparkArgs = {
-//                "--master", sparkConf.get("spark.master"),
-//                "--name", sparkConf.get("spark.app.name"),
-//                "--deploy-mode", sparkConf.get("spark.deploy.mode"),
-//                "path/to/my-spark-job.jar"
-//        };
 //
-//        SparkSubmit.main(sparkArgs);
 //    }
 
 
