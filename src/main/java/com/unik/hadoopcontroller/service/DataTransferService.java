@@ -63,7 +63,7 @@ public class DataTransferService {
                 newRecord.put("id", model.getId());
                 newRecord.put("title", model.getTitle());
                 newRecord.put("publishDate", model.getPublishDate().toString());
-                newRecord.put("authors", model.getAuthors());
+                newRecord.put("authors", new GenericData.Array<>(schema.getField("authors").schema(), model.getAuthors()));
                 newRecord.put("content", model.getContent());
                 newRecords.add(newRecord);
             } else {
@@ -140,26 +140,6 @@ public class DataTransferService {
             } catch (IOException e) {
                 logger.error("Error reading Parquet file", e);
                 throw e;
-            }
-        }
-
-        // Manually process the authors field to decode it
-        for (Map<String, Object> record : result) {
-            if (record.containsKey("authors") && record.get("authors") instanceof List) {
-                List<?> authorsList = (List<?>) record.get("authors");
-                List<String> decodedAuthors = new ArrayList<>();
-                for (Object author : authorsList) {
-                    if (author instanceof Map) {
-                        Map<?, ?> authorMap = (Map<?, ?>) author;
-                        if (authorMap.containsKey("bytes")) {
-                            byte[] bytes = (byte[]) authorMap.get("bytes");
-                            decodedAuthors.add(new String(bytes, StandardCharsets.UTF_8));
-                        }
-                    } else if (author instanceof String) {
-                        decodedAuthors.add((String) author);
-                    }
-                }
-                record.put("authors", decodedAuthors);
             }
         }
 
