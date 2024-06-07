@@ -2,11 +2,17 @@ package com.unik.hadoopcontroller.controller;
 
 import com.unik.hadoopcontroller.service.HdfsDirectService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.List;
+
 
 @RequestMapping("/files")
 @CrossOrigin(origins = "http://localhost:8081")
@@ -84,6 +90,17 @@ public class HdfsDirectController {
             return hdfsDirectService.listFiles(directoryPath);
         } catch (IOException e) {
             return List.of("Error listing files in directory: " + e.getMessage());
+        }
+    }
+    @GetMapping("/files/download/{fileName}")
+    public ResponseEntity<Resource> downloadFile(@PathVariable String fileName) {
+        try {
+            Resource file = hdfsDirectService.downloadFile(fileName);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                    .body(file);
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unable to download file", e);
         }
     }
 }
