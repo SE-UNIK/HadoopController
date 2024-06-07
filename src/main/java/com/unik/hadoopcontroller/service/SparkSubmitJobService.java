@@ -29,8 +29,8 @@ public class SparkSubmitJobService {
     @Autowired
     private SparkModel sparkModel;
 
-    private void redirectOutput(InputStream inputStream, String filePath) throws IOException {
-        try (FileOutputStream fileOutputStream = new FileOutputStream(new File(filePath))) {
+    private void redirectOutput(InputStream inputStream, File outputFile) throws IOException {
+        try (FileOutputStream fileOutputStream = new FileOutputStream(outputFile)) {
             byte[] buffer = new byte[1024];
             int length;
             while ((length = inputStream.read(buffer)) != -1) {
@@ -40,9 +40,11 @@ public class SparkSubmitJobService {
     }
 
     public File launchSparkJob(SparkModel sparkJobModel, String fileName) {
+        Process spark = null;
+        File tempOutputFile = null;
         try {
             String inputFilePath = hdfsRootDir + sparkJobModel.getInputDirectoryPath() + sparkJobModel.getInputFileName();
-            Process spark = new SparkLauncher()
+            spark = new SparkLauncher()
                     .setSparkHome(systemHadoopRootDir + "/spark")
                     .setAppResource(systemSparkAlgorithmsDir + sparkJobModel.getAlgorithmName())
                     .setMaster("yarn")
@@ -56,23 +58,32 @@ public class SparkSubmitJobService {
             List<String> authors = Arrays.asList("Sparky");
             String systemOutputFilePath = "output/" + analysisFileName;
 
-            File outputFile = new File(systemOutputFilePath);
             if (!Files.exists(Paths.get("output"))) {
                 Files.createDirectories(Paths.get("output"));
             }
 
-            redirectOutput(spark.getInputStream(), systemOutputFilePath);
+            tempOutputFile = new File(systemOutputFilePath);
+            redirectOutput(spark.getInputStream(), tempOutputFile);
 
             int exitCode = spark.waitFor();
-            MultipartFile results = new CustomMultipartFile(outputFile);
-
-            hdfsDirectService.writeToHdfsUniqueWithFilePath(sparkJobModel.getOutputDirectoryPath(), analysisFileName, results, title, authors);
             System.out.println("Spark job finished with exit code: " + exitCode);
-            return outputFile;
+
+            // Read the temporary output file and write it to HDFS
+            MultipartFile results = new CustomMultipartFile(tempOutputFile);
+            hdfsDirectService.writeToHdfsUniqueWithFilePath(sparkJobModel.getOutputDirectoryPath(), analysisFileName, results, title, authors);
+
+            return tempOutputFile;
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
             System.out.println("Spark job was not finished successfully.");
             return null;
+        } finally {
+            if (spark != null) {
+                spark.destroy();
+            }
+            if (tempOutputFile != null && tempOutputFile.exists()) {
+                tempOutputFile.delete();
+            }
         }
     }
 }
