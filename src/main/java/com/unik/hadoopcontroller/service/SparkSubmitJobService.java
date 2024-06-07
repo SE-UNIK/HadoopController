@@ -7,15 +7,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class SparkSubmitJobService {
@@ -30,14 +28,19 @@ public class SparkSubmitJobService {
     @Autowired
     private SparkModel sparkModel;
 
-    private void redirectOutput(InputStream inputStream, File outputFile) throws IOException {
-        try (FileOutputStream fileOutputStream = new FileOutputStream(outputFile)) {
-            byte[] buffer = new byte[1024];
-            int length;
-            while ((length = inputStream.read(buffer)) != -1) {
-                fileOutputStream.write(buffer, 0, length);
+    private void redirectOutput(InputStream inputStream, OutputStream outputStream) {
+        Executors.newSingleThreadExecutor().submit(() -> {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    writer.write(line);
+                    writer.newLine();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        }
+        });
     }
 
     public File launchSparkJob(SparkModel sparkJobModel, String fileName) {
@@ -45,9 +48,7 @@ public class SparkSubmitJobService {
         File tempOutputFile = null;
         try {
             String inputFilePath = hdfsRootDir + sparkJobModel.getInputDirectoryPath() + sparkJobModel.getInputFileName();
-            File stdoutFile = new File("output/stdout.log");
 
-            File stderrFile = new File("output/stderr.log");
             spark = new SparkLauncher()
                     .setSparkHome(systemHadoopRootDir + "/spark")
                     .setAppResource(systemSparkAlgorithmsDir + sparkJobModel.getAlgorithmName())
@@ -55,8 +56,6 @@ public class SparkSubmitJobService {
                     .setDeployMode("cluster")
                     .addAppArgs(inputFilePath)
                     .setVerbose(true)
-                    .redirectOutput(stdoutFile)  // Redirect stdout
-                    .redirectError(stderrFile)   // Redirect stderr
                     .launch();
 
             String analysisFileName = "analysis_results_" + fileName;
@@ -68,15 +67,32 @@ public class SparkSubmitJobService {
                 Files.createDirectories(Paths.get("output"));
             }
 
-            // Wait for the process to finish and capture the output
+            tempOutputFile = new File(systemOutputFilePath);
+            File stdoutFile = new File("output/stdout.log");
+            File stderrFile = new File("output/stderr.log");
+
+            try (FileOutputStream stdoutStream = new FileOutputStream(stdoutFile);
+                 FileOutputStream stderrStream = new FileOutputStream(stderrFile)) {
+                // Redirect both stdout and stderr to separate files
+                redirectOutput(spark.getInputStream(), stdoutStream);
+                redirectOutput(spark.getErrorStream(), stderrStream);
+            }
+
             int exitCode = spark.waitFor();
             System.out.println("Spark job finished with exit code: " + exitCode);
 
             // Combine stdout and stderr into a single file
-            tempOutputFile = new File(systemOutputFilePath);
-            try (FileOutputStream outputStream = new FileOutputStream(tempOutputFile)) {
-                Files.copy(Paths.get("output/stdout.log"), outputStream);
-                Files.copy(Paths.get("output/stderr.log"), outputStream);
+            try (FileOutputStream outputStream = new FileOutputStream(tempOutputFile, true);
+                 FileInputStream stdoutInputStream = new FileInputStream(stdoutFile);
+                 FileInputStream stderrInputStream = new FileInputStream(stderrFile)) {
+                byte[] buffer = new byte[1024];
+                int length;
+                while ((length = stdoutInputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, length);
+                }
+                while ((length = stderrInputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, length);
+                }
             }
 
             // Read the temporary output file and write it to HDFS
