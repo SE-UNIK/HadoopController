@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.List;
 
@@ -44,6 +45,9 @@ public class SparkSubmitJobService {
         File tempOutputFile = null;
         try {
             String inputFilePath = hdfsRootDir + sparkJobModel.getInputDirectoryPath() + sparkJobModel.getInputFileName();
+            File stdoutFile = new File("output/stdout.log");
+
+            File stderrFile = new File("output/stderr.log");
             spark = new SparkLauncher()
                     .setSparkHome(systemHadoopRootDir + "/spark")
                     .setAppResource(systemSparkAlgorithmsDir + sparkJobModel.getAlgorithmName())
@@ -51,6 +55,8 @@ public class SparkSubmitJobService {
                     .setDeployMode("cluster")
                     .addAppArgs(inputFilePath)
                     .setVerbose(true)
+                    .redirectOutput(stdoutFile)  // Redirect stdout
+                    .redirectError(stderrFile)   // Redirect stderr
                     .launch();
 
             String analysisFileName = "analysis_results_" + fileName;
@@ -62,11 +68,16 @@ public class SparkSubmitJobService {
                 Files.createDirectories(Paths.get("output"));
             }
 
-            tempOutputFile = new File(systemOutputFilePath);
-            redirectOutput(spark.getInputStream(), tempOutputFile);
-
+            // Wait for the process to finish and capture the output
             int exitCode = spark.waitFor();
             System.out.println("Spark job finished with exit code: " + exitCode);
+
+            // Combine stdout and stderr into a single file
+            tempOutputFile = new File(systemOutputFilePath);
+            try (FileOutputStream outputStream = new FileOutputStream(tempOutputFile)) {
+                Files.copy(Paths.get("output/stdout.log"), outputStream);
+                Files.copy(Paths.get("output/stderr.log"), outputStream);
+            }
 
             // Read the temporary output file and write it to HDFS
             MultipartFile results = new CustomMultipartFile(tempOutputFile);
