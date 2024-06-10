@@ -9,8 +9,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 
 import java.io.IOException;
+import java.io.FileNotFoundException;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -61,10 +65,46 @@ public class HdfsDirectService {
             logger.warn("File already exists: {}", filePathStr);
         }
     }
+
+    public void appendToHdfs(String filePathStr, String content) throws IOException {
+        Path filePath = new Path(filePathStr);
+        if (fileSystem.exists(filePath)) {
+            try (FSDataOutputStream outputStream = fileSystem.append(filePath)) {
+                outputStream.write(content.getBytes());
+                logger.info("Successfully appended to HDFS file: {}", filePathStr);
+            } catch (IOException e) {
+                logger.error("Error appending to HDFS", e);
+                throw e;
+            }
+        } else {
+            logger.warn("File does not exist: {}", filePathStr);
+            throw new IOException("File does not exist: " + filePathStr);
+        }
+    }
     public void writeToHdfsUnique(String originalFileName, MultipartFile file,String title, List<String> authors) throws IOException {
         String uniqueFilePathStr = "/user/hadoop/inputs/" + UUID.randomUUID().toString() + "_" + originalFileName;
         Path filePath = new Path(uniqueFilePathStr);
         try (FSDataOutputStream outputStream = fileSystem.create(filePath)) {
+            outputStream.write(file.getBytes());
+            // Save the file metadata to MongoDB
+            HdfsFileModel hdfsFileModel = new HdfsFileModel();
+            hdfsFileModel.setFileName(originalFileName);
+            hdfsFileModel.setFilePath(uniqueFilePathStr);
+            hdfsFileModel.setFileSize(file.getSize());
+            hdfsFileModel.setTitle(title);
+            hdfsFileModel.setAuthors(authors);
+            // Add other metadata fields as needed
+            hdfsFileRepository.save(hdfsFileModel);
+            logger.info("Successfully written to HDFS file: {}", uniqueFilePathStr);
+        } catch (IOException e) {
+            logger.error("Error writing to HDFS", e);
+            throw e;
+        }
+    }
+    public void writeToHdfsUniqueWithFilePath(String filePath,String originalFileName, MultipartFile file,String title, List<String> authors) throws IOException {
+        String uniqueFilePathStr = filePath + UUID.randomUUID().toString() + "_" + originalFileName;
+        Path filePaths = new Path(uniqueFilePathStr);
+        try (FSDataOutputStream outputStream = fileSystem.create(filePaths)) {
             outputStream.write(file.getBytes());
             // Save the file metadata to MongoDB
             HdfsFileModel hdfsFileModel = new HdfsFileModel();
@@ -105,5 +145,16 @@ public class HdfsDirectService {
         }
         logger.info("Files in directory {}: {}", directoryPathStr, files);
         return files;
+    }
+    public Resource downloadFile(String fileName) throws IOException {
+        String filePathStr = "/user/hadoop/outputs/" + fileName;
+        Path filePath = new Path(filePathStr);
+
+        if (!fileSystem.exists(filePath)) {
+            throw new FileNotFoundException("File not found in HDFS: " + filePathStr);
+        }
+
+        FSDataInputStream inputStream = fileSystem.open(filePath);
+        return new InputStreamResource(inputStream);
     }
 }

@@ -33,3 +33,18 @@ Content-Type: application/json
     "fileSize": "100",
     "authors": ["Author One", "Author Two"]
 }
+
+### Create new file
+POST http://localhost:8080/api/file
+Content-Type: application/json
+
+{
+    "title": "Title 1",
+    "fileName": "File name",
+    "filePath": "/path/to/file",
+    "fileSize": "100",
+    "authors": ["Author One", "Author Two"]
+}
+
+### Transfer File
+POST http://localhost:8080/data/transfer?directoryName=/

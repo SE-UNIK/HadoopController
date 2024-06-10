@@ -27,6 +27,63 @@ GET http://localhost:8080/files/read?path=/user/hadoop/inputs/d5405a50-94a6-41fa
 Accept: application/json
 
 
-### Test HDFS Reader Service
-GET http://localhost:8080/files/read?path=/user/hadoop/inputs/ef412f4f-157b-4f05-a532-8b68bc45037f_hi.txt
+### Test Spark Job Submission
+POST http://localhost:8080/spark/submit?fileName=alice.txt&hdfsFilePath=/user/hadoop/analysis/
+Content-Type: application/json
+
+{
+  "inputDirectoryPath": "/user/hadoop/inputs/",
+  "inputFileName": "alice.txt",
+  "outputDirectoryPath": "/user/hadoop/analysis/",
+  "algorithmName": "wordcount.py"
+}
+
+### Find all files
+GET http://localhost:8080/api/file
+Accept: application/json
+
+### Get a file by ID
+GET http://localhost:8080/api/file/{id}
+Accept: application/json
+
+### Create a new file metadata entry
+POST http://localhost:8080/api/file
+Content-Type: application/json
+
+{
+    "title": "Sample Article",
+    "fileName": "sample_article.txt",
+    "filePath": "/user/hadoop/inputs/sample_article.txt",
+    "fileSize": 12345,
+    "authors": ["Author One", "Author Two"]
+}
+
+### Update a file metadata entry
+PUT http://localhost:8080/api/file/
+Content-Type: application/json
+
+{
+    "title": "Updated Sample Article",
+    "fileName": "updated_sample_article.txt",
+    "filePath": "/user/hadoop/inputs/updated_sample_article.txt",
+    "fileSize": 67890,
+    "authors": ["Author One", "Author Three"]
+}
+
+### Delete a file metadata entry
+DELETE http://localhost:8080/api/file/
+
+
+### Test Data Transfer Service
+POST http://localhost:8080/data/transfer
+Content-Type: application/json
+
+[
+  "6655671fbb282653890e367f",
+  "665c506e9544eb5462c6ebff",
+  "665f43af449228603da9c171"
+]
+
+### Test Data Transfer Service - Read Parquet File
+GET http://localhost:8080/data/parquet
 Accept: application/json

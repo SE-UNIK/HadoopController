@@ -36,4 +36,5 @@ public class HadoopConfig {
     public FileSystem fileSystem(org.apache.hadoop.conf.Configuration hadoopConfiguration) throws IOException {
         return FileSystem.get(URI.create(fsUri), hadoopConfiguration);
     }
+
 }
