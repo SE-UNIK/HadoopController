@@ -45,17 +45,21 @@ public class HdfsDirectController {
         }
     }
     @PostMapping("/upload")
-    public String uploadFile(@RequestParam String originalFileName,
-                             @RequestParam("file") MultipartFile file,
-                             @RequestParam String title,
-                             @RequestParam List<String> authors) {
-        try{
-            hdfsDirectService.writeToHdfsUnique(originalFileName,file,title,authors);
+    public String uploadFile(@RequestParam("file") MultipartFile file,
+                         @RequestParam String title,
+                         @RequestParam List<String> authors) {
+        String originalFileName = file.getOriginalFilename();
+        if (originalFileName == null) {
+            return "Error: Could not determine original file name.";
+        }
+        try {
+            hdfsDirectService.writeToHdfsUnique(originalFileName, file, title, authors);
             return "Successfully written to HDFS.";
         } catch (IOException e) {
             return "Error uploading to HDFS: " + e.getMessage();
         }
     }
+
 
     @PostMapping("/append")
     public String appendToFile(@RequestParam String path, @RequestParam String content) {
