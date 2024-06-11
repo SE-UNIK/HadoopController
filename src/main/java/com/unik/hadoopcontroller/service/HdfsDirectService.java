@@ -125,6 +125,7 @@ public class HdfsDirectService {
         }
     }
 
+
     public boolean deleteFile(String filePathStr) throws IOException {
         Path filePath = new Path(filePathStr);
         boolean result = fileSystem.delete(filePath, true);
