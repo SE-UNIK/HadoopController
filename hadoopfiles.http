@@ -32,7 +32,7 @@ POST http://localhost:8080/spark/submit?fileName=alice.txt&hdfsFilePath=/user/ha
 Content-Type: application/json
 
 {
-  "inputDirectoryPath": "/user/hadoop/inputs/",
+  "inputDirectoryPath": "inputs/",
   "inputFileName": "alice.txt",
   "outputDirectoryPath": "/user/hadoop/analysis/",
   "algorithmName": "wordcount.py"

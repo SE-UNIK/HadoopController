@@ -16,6 +16,7 @@ public class SparkController {
 
     @PostMapping("/submit")
     public String launchSparkJob(@RequestBody SparkModel sparkModel, @RequestParam String fileName, @RequestParam String hdfsFilePath) {
+        System.out.println("Submitting Spark job " + sparkModel.toString());
         File outputFile = sparkSubmitJobService.launchSparkJob(sparkModel, fileName);
         if (outputFile != null) {
             return "Spark job submitted successfully. Output file: " + outputFile.getPath();
