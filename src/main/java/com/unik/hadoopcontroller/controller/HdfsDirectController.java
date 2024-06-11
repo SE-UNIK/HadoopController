@@ -2,14 +2,18 @@ package com.unik.hadoopcontroller.controller;
 
 import com.unik.hadoopcontroller.service.HdfsDirectService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -93,7 +97,7 @@ public class HdfsDirectController {
         }
     }
     @GetMapping("/files/download/{fileName}")
-    public ResponseEntity<Resource> downloadFile(@PathVariable String fileName) {
+    public ResponseEntity<Resource> downloadFileWithName(@PathVariable String fileName) {
         try {
             Resource file = hdfsDirectService.downloadFile(fileName);
             return ResponseEntity.ok()
@@ -101,6 +105,22 @@ public class HdfsDirectController {
                     .body(file);
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unable to download file", e);
+        }
+    }
+    @GetMapping("/download")
+    public ResponseEntity<Resource> downloadFileWithPath(@RequestParam String path) {
+        try {
+            File file = hdfsDirectService.getFileFromHdfs(path);
+            InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
+
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .contentLength(file.length())
+                .body(resource);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

@@ -2,6 +2,7 @@ package com.unik.hadoopcontroller.service;
 
 import com.unik.hadoopcontroller.model.HdfsFileModel;
 import com.unik.hadoopcontroller.repository.HdfsFileRepository;
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.FileNotFoundException;
 
@@ -157,4 +160,17 @@ public class HdfsDirectService {
         FSDataInputStream inputStream = fileSystem.open(filePath);
         return new InputStreamResource(inputStream);
     }
+     public File getFileFromHdfs(String filePathStr) throws IOException {
+        Path filePath = new Path(filePathStr);
+        File tempFile = File.createTempFile("hdfs-", "-download");
+        tempFile.deleteOnExit();
+
+        try (FSDataInputStream inputStream = fileSystem.open(filePath);
+             FileOutputStream outputStream = new FileOutputStream(tempFile)) {
+            IOUtils.copy(inputStream, outputStream);
+        }
+
+        return tempFile;
+    }
+
 }
