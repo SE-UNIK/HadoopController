@@ -9,8 +9,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 
 import java.io.IOException;
+import java.io.FileNotFoundException;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -141,5 +145,16 @@ public class HdfsDirectService {
         }
         logger.info("Files in directory {}: {}", directoryPathStr, files);
         return files;
+    }
+    public Resource downloadFile(String fileName) throws IOException {
+        String filePathStr = "/user/hadoop/outputs/" + fileName;
+        Path filePath = new Path(filePathStr);
+
+        if (!fileSystem.exists(filePath)) {
+            throw new FileNotFoundException("File not found in HDFS: " + filePathStr);
+        }
+
+        FSDataInputStream inputStream = fileSystem.open(filePath);
+        return new InputStreamResource(inputStream);
     }
 }
