@@ -7,9 +7,15 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class HdfsFileModelService {
+    private static final Logger logger = LoggerFactory.getLogger(HdfsFileModelService.class);
+
 
     @Autowired
     private HdfsFileRepository hdfsFileRepository;
@@ -40,4 +46,19 @@ public class HdfsFileModelService {
     public void deleteHdfsFile(String id) {
         hdfsFileRepository.deleteById(id);
     }
+
+            // New method to get files by directory path
+    public List<HdfsFileModel> getFilesByDirectoryPath(String directoryPath) {
+        List<HdfsFileModel> allFiles = hdfsFileRepository.findAll();
+        logger.info("Total files found: {}", allFiles.size());
+
+        List<HdfsFileModel> filteredFiles = allFiles.stream()
+                .filter(file -> file.getFilePath() != null && file.getFilePath().startsWith(directoryPath))
+                .collect(Collectors.toList());
+
+        logger.info("Files matching directory path '{}': {}", directoryPath, filteredFiles.size());
+
+        return filteredFiles;
+    }
+
 }

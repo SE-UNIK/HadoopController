@@ -39,4 +39,9 @@ public class HdfsFileModelController {
     public void deleteHdfsFile(@PathVariable String id) {
         hdfsFileModelService.deleteHdfsFile(id);
     }
+    // New endpoint to get files by directory path
+    @GetMapping("/file/by-directory")
+    public List<HdfsFileModel> getFilesByDirectoryPath(@RequestParam String directoryPath) {
+        return hdfsFileModelService.getFilesByDirectoryPath(directoryPath);
+    }
 }
