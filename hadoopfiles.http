@@ -28,7 +28,7 @@ Accept: application/json
 
 
 ### Test Wordcount Spark Job Submission
-POST http://localhost:8080/spark/submit?algorithmName=wordcount
+POST http://localhost:8080/spark/submit/wordcount
 Content-Type: application/json
 
 {
@@ -36,19 +36,19 @@ Content-Type: application/json
 }
 
 ### Test KMeans Spark Job Submission
-POST http://localhost:8080/spark/submit?algorithmName=kmeans
+POST http://localhost:8080/spark/submit/kmeans
 Content-Type: application/json
 
 {
   "inputFileName": ["alice.txt", "buggy.txt", "game.txt"]
 }
 
-### Test LDA Spark Job Submission
-POST http://localhost:8080/spark/submit?algorithmName=lda
+### Test TF-IDF Spark Job Submission
+POST http://localhost:8080/spark/submit/tfidf
 Content-Type: application/json
 
 {
-  "inputFileName": ["alice.txt", "buggy.txt", "game.txt"]
+  "inputFileName": ["alice.txt"]
 }
 
 ### Find all files
