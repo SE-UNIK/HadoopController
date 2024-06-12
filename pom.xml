@@ -95,6 +95,13 @@
             <artifactId>parquet-avro</artifactId>
             <version>1.12.3</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20210307</version> <!-- or the latest version -->
+        </dependency>
+
     </dependencies>
 
     <build>
