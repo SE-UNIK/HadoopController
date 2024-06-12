@@ -26,154 +26,184 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class SparkSubmitJobService {
 
-    private final String systemHadoopRootDir = "/home/hadoop";
-    private final String systemSparkAlgorithmsDir = systemHadoopRootDir + "/spark/algorithms/";
-    private final String hdfsRootDir = "/user/hadoop/";
+    private final String sparkHome = "/home/hadoop/spark";
+    private final String systemSparkAlgorithmsDir = sparkHome + "/algorithms/";
+    private final String inputFilesDir = "/user/hadoop/inputs/";
 
-    @Autowired
-    private FileSystem fileSystem;
+    public static void deleteHDFSDirectory(String directoryPath) {
+        Configuration configuration = new Configuration();
+        try {
+            FileSystem hdfs = FileSystem.get(configuration);
+            Path path = new Path(directoryPath);
 
-    @Autowired
-    private Configuration hadoopConfiguration;
-
-    @Autowired
-    private HdfsDirectService hdfsDirectService;
-
-    @Autowired
-    private SparkModel sparkModel;
-
-    private void redirectOutput(InputStream inputStream, OutputStream outputStream) {
-        Executors.newSingleThreadExecutor().submit(() -> {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    writer.write(line);
-                    writer.newLine();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (hdfs.exists(path)) {
+                hdfs.delete(path, true);
+                System.out.println("Directory " + directoryPath + " deleted successfully.");
+            } else {
+                System.out.println("Directory " + directoryPath + " does not exist.");
             }
-        });
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to delete HDFS directory", e);
+        }
     }
 
-    public File launchSparkJob(SparkModel sparkJobModel, String fileName) {
-        Process spark = null;
-        File tempOutputFile = null;
+    private void renameAndMoveHdfsFile(String sourcePathStr, String destPathStr) {
+        Configuration configuration = new Configuration();
         try {
-            String inputFilePath = hdfsRootDir + sparkJobModel.getInputDirectoryPath() + sparkJobModel.getInputFileName();
+            FileSystem hdfs = FileSystem.get(configuration);
+            Path sourcePath = new Path(sourcePathStr);
+            Path destPath = new Path(destPathStr);
+            Path sourceDirPath = sourcePath.getParent(); // Get the parent directory of the source file
 
+            if (hdfs.exists(destPath)) {
+                hdfs.delete(destPath, true);
+            }
+
+            boolean success = hdfs.rename(sourcePath, destPath);
+            if (success) {
+                System.out.println("File renamed and moved successfully.");
+
+                // Delete the original directory
+                if (hdfs.exists(sourceDirPath)) {
+                    hdfs.delete(sourceDirPath, true);
+                    System.out.println("Original directory deleted successfully.");
+                }
+            } else {
+                System.out.println("File rename and move failed.");
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to rename and move HDFS file", e);
+        }
+    }
+
+
+    public void launchWordcountSparkJob(List<String> fileNames) {
+        Process spark = null;
+        String outputPath = "/home/hadoop/wordcount_result";
+        System.out.println("Starting Wordcount Spark Job");
+        try {
+            // Concatenate all file names into a single string separated by commas
+            String inputFilePath = fileNames.stream()
+                    .map(fileName -> inputFilesDir + fileName)
+                    .collect(Collectors.joining(","));
+
+            System.out.println("Launching spark job with input files: " + inputFilePath);
             spark = new SparkLauncher()
-                    .setSparkHome(systemHadoopRootDir + "/spark")
-                    .setAppResource(systemSparkAlgorithmsDir + sparkJobModel.getAlgorithmName())
+                    .setSparkHome(sparkHome)
+                    .setAppResource(systemSparkAlgorithmsDir + "wordcount.py")
                     .setMaster("yarn")
                     .setDeployMode("cluster")
                     .addAppArgs(inputFilePath)
                     .setVerbose(true)
                     .launch();
 
-            String analysisFileName = "analysis_results_" + fileName;
-            String title = fileName + "'s Analysis Results";
-            List<String> authors = Arrays.asList("Sparky");
-            String systemOutputFilePath = "output/" + analysisFileName;
+            int exitCode = spark.waitFor();
+            System.out.println("Spark job finished with exit code: " + exitCode);
 
-            if (!Files.exists(Paths.get("output"))) {
-                Files.createDirectories(Paths.get("output"));
+            //deleteHDFSDirectory(outputPath);
+
+            String renameInputFile = fileNames.stream()
+                    .map(fileName -> fileName.substring(0, fileName.lastIndexOf('.'))) // Remove file extension
+                    .collect(Collectors.joining("_")) + ".txt";
+            String renameNewFile = "wordcount_" + renameInputFile;
+            if(exitCode == 0) {
+                renameAndMoveHdfsFile(outputPath + "/part-00000", renameNewFile);
             }
 
-            tempOutputFile = new File(systemOutputFilePath);
-            File stdoutFile = new File("output/stdout.log");
-            File stderrFile = new File("output/stderr.log");
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-            try (FileOutputStream stdoutStream = new FileOutputStream(stdoutFile);
-                 FileOutputStream stderrStream = new FileOutputStream(stderrFile)) {
-                // Redirect both stdout and stderr to separate files
-                redirectOutput(spark.getInputStream(), stdoutStream);
-                redirectOutput(spark.getErrorStream(), stderrStream);
-            }
+
+    public void launchKMeansSparkJob(List<String> fileNames) {
+        Process spark = null;
+        String outputPath = "/home/hadoop/kmeans_result";
+        System.out.println("Starting KMeans Spark Job");
+        try {
+            String inputFilePath = fileNames.stream()
+                    .map(fileName -> inputFilesDir + fileName)
+                    .collect(Collectors.joining(","));
+
+            System.out.println("Launching spark job: " + inputFilePath);
+            spark = new SparkLauncher()
+                    .setSparkHome(sparkHome)
+                    .setAppResource(systemSparkAlgorithmsDir + "kmeans_al.py")
+                    .setMaster("yarn")
+                    .setDeployMode("cluster")
+                    .addAppArgs(inputFilePath)
+                    .setVerbose(true)
+                    .launch();
 
             int exitCode = spark.waitFor();
             System.out.println("Spark job finished with exit code: " + exitCode);
 
-            // Combine stdout and stderr into a single file
-            try (FileOutputStream outputStream = new FileOutputStream(tempOutputFile, true);
-                 FileInputStream stdoutInputStream = new FileInputStream(stdoutFile);
-                 FileInputStream stderrInputStream = new FileInputStream(stderrFile)) {
-                byte[] buffer = new byte[1024];
-                int length;
-                while ((length = stdoutInputStream.read(buffer)) != -1) {
-                    outputStream.write(buffer, 0, length);
-                }
-                while ((length = stderrInputStream.read(buffer)) != -1) {
-                    outputStream.write(buffer, 0, length);
-                }
+            String renameInputFile = fileNames.stream()
+                    .map(fileName -> fileName.substring(0, fileName.lastIndexOf('.'))) // Remove file extension
+                    .collect(Collectors.joining("_")) + ".txt";
+            String renameNewFile = "kmeans_" + renameInputFile;
+            if(exitCode == 0) {
+                renameAndMoveHdfsFile(outputPath + "/part-00000", renameNewFile);
             }
 
-            // Read the temporary output file and write it to HDFS
-            MultipartFile results = new CustomMultipartFile(tempOutputFile);
-            hdfsDirectService.writeToHdfsUniqueWithFilePath(sparkJobModel.getOutputDirectoryPath(), analysisFileName, results, title, authors);
-
-            return tempOutputFile;
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-            System.out.println("Spark job was not finished successfully.");
-            return null;
-        } finally {
-            if (spark != null) {
-                spark.destroy();
-            }
-            if (tempOutputFile != null && tempOutputFile.exists()) {
-                tempOutputFile.delete();
-            }
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
-    public List<Map<String, Object>> getAnalysisResults() throws IOException {
-        String resultsFilePathStr = "/user/hadoop/analysis/results.parquet";
-        Path resultsFilePath = new Path(resultsFilePathStr);
-        List<Map<String, Object>> results = new ArrayList<>();
 
-        if (!fileSystem.exists(resultsFilePath)) {
-            throw new FileNotFoundException("Analysis results file not found in HDFS: " + resultsFilePathStr);
-        }
+    public void launchLDASparkJob(List<String> fileNames) {
+        Process spark = null;
+        String outputPath = "/home/hadoop/lda_result";
+        System.out.println("Starting Topic LDA Spark Job");
+        try {
+            // Concatenate all file names into a single string separated by commas
+            String inputFilePath = fileNames.stream()
+                    .map(fileName -> inputFilesDir + fileName)
+                    .collect(Collectors.joining(","));
 
-        try (ParquetReader<GenericRecord> reader = AvroParquetReader.<GenericRecord>builder(HadoopInputFile.fromPath(resultsFilePath, hadoopConfiguration)).build()) {
-            GenericRecord record;
-            Schema schema = getAnalysisResultsSchema();
-            while ((record = reader.read()) != null) {
-                Map<String, Object> resultMap = new HashMap<>();
-                for (Schema.Field field : schema.getFields()) {
-                    Object value = record.get(field.name());
-                    if (value instanceof CharSequence) {
-                        value = value.toString();
-                    } else if (value instanceof GenericData.Array) {
-                        List<String> stringList = new ArrayList<>();
-                        for (Object item : (GenericData.Array<?>) value) {
-                            stringList.add(item.toString());
-                        }
-                        value = stringList;
-                    }
-                    resultMap.put(field.name(), value);
-                }
-                results.add(resultMap);
+            System.out.println("Launching spark job with input files: " + inputFilePath);
+            spark = new SparkLauncher()
+                    .setSparkHome(sparkHome)
+                    .setAppResource(systemSparkAlgorithmsDir + "topicLDA.py")
+                    .setMaster("yarn")
+                    .setDeployMode("cluster")
+                    .addAppArgs(inputFilePath)
+                    .setVerbose(true)
+                    .launch();
+
+            int exitCode = spark.waitFor();
+            System.out.println("Spark job finished with exit code: " + exitCode);
+
+            //deleteHDFSDirectory(outputPath);
+
+            String renameInputFile = fileNames.stream()
+                    .map(fileName -> fileName.substring(0, fileName.lastIndexOf('.'))) // Remove file extension
+                    .collect(Collectors.joining("_")) + ".txt";
+            String renameNewFile = "lda_" + renameInputFile;
+            if(exitCode == 0) {
+                renameAndMoveHdfsFile(outputPath + "/part-00000", renameNewFile);
             }
+
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
-
-        return results;
-    }
-
-    private Schema getAnalysisResultsSchema() {
-        String schemaJson = "{"
-                + "\"type\":\"record\","
-                + "\"name\":\"AnalysisResults\","
-                + "\"fields\":["
-                + "  {\"name\":\"id\", \"type\":\"string\"},"
-                + "  {\"name\":\"result\", \"type\":\"string\"}"
-                + "]}";
-        return new Schema.Parser().parse(schemaJson);
     }
 
 }
