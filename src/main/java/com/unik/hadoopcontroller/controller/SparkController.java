@@ -14,18 +14,27 @@ public class SparkController {
     @Autowired
     private SparkSubmitJobService sparkSubmitJobService;
 
-    @PostMapping("/submit")
-    public String launchSparkJob(@RequestBody SparkModel sparkModel, @RequestParam String algorithmName) {
-        System.out.println("Submitting Spark job " + sparkModel.toString());
+    @PostMapping("/submit/wordcount")
+    public String launchWordcountJob(@RequestBody SparkModel sparkModel) {
+        System.out.println("Submitting Wordcount Spark job " + sparkModel.toString());
         List<String> fileNames = sparkModel.getInputFileName();
-        if (algorithmName.equals("wordcount")) {
-            sparkSubmitJobService.launchWordcountSparkJob(fileNames);
-        }
-        else if(algorithmName.equals("kmeans")) {
-            sparkSubmitJobService.launchKMeansSparkJob(fileNames);
-        }
-        else sparkSubmitJobService.launchLDASparkJob(fileNames);
-        return "Spark job launched successfully";
+        sparkSubmitJobService.launchWordcountSparkJob(fileNames);
+        return "Wordcount Spark job launched successfully";
     }
 
+    @PostMapping("/submit/kmeans")
+    public String launchKMeansJob(@RequestBody SparkModel sparkModel) {
+        System.out.println("Submitting KMeans Spark job " + sparkModel.toString());
+        List<String> fileNames = sparkModel.getInputFileName();
+        sparkSubmitJobService.launchKMeansSparkJob(fileNames);
+        return "KMeans Spark job launched successfully";
+    }
+
+    @PostMapping("/submit/tfidf")
+    public String launchLDAJob(@RequestBody SparkModel sparkModel) {
+        System.out.println("Submitting TFIDF Spark job " + sparkModel.toString());
+        List<String> fileNames = sparkModel.getInputFileName();
+        sparkSubmitJobService.launchTFIDFSparkJob(fileNames);
+        return "LDA Spark job launched successfully";
+    }
 }

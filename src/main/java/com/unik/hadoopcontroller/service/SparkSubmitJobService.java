@@ -34,6 +34,7 @@ public class SparkSubmitJobService {
     private final String sparkHome = "/home/hadoop/spark";
     private final String systemSparkAlgorithmsDir = sparkHome + "/algorithms/";
     private final String inputFilesDir = "/user/hadoop/inputs/";
+    private final String venvDir = "/home/hadoop/spark/venv.tar.gz#venv";
 
     public static void deleteHDFSDirectory(String directoryPath) {
         Configuration configuration = new Configuration();
@@ -134,13 +135,16 @@ public class SparkSubmitJobService {
                     .map(fileName -> inputFilesDir + fileName)
                     .collect(Collectors.joining(","));
 
+            //String args = inputFilePath + " 3 1.0";
             System.out.println("Launching spark job: " + inputFilePath);
             spark = new SparkLauncher()
                     .setSparkHome(sparkHome)
                     .setAppResource(systemSparkAlgorithmsDir + "kmeans_al.py")
+                    //.addPyFile(sparkHome + "/py-files/numpy.zip")
                     .setMaster("yarn")
                     .setDeployMode("cluster")
-                    .addAppArgs(inputFilePath)
+                    .addFile(venvDir)
+                    .addAppArgs(inputFilePath, "2", "0.001")
                     .setVerbose(true)
                     .launch();
 
@@ -164,10 +168,11 @@ public class SparkSubmitJobService {
         }
     }
 
-    public void launchLDASparkJob(List<String> fileNames) {
+    public void launchTFIDFSparkJob(List<String> fileNames) {
         Process spark = null;
-        String outputPath = "/home/hadoop/lda_result";
-        System.out.println("Starting Topic LDA Spark Job");
+        String outputPath = "/home/hadoop/tfidf_result";
+        System.out.println("Starting TF-IDF Spark Job");
+
         try {
             // Concatenate all file names into a single string separated by commas
             String inputFilePath = fileNames.stream()
@@ -177,23 +182,24 @@ public class SparkSubmitJobService {
             System.out.println("Launching spark job with input files: " + inputFilePath);
             spark = new SparkLauncher()
                     .setSparkHome(sparkHome)
-                    .setAppResource(systemSparkAlgorithmsDir + "topicLDA.py")
+                    .setAppResource(systemSparkAlgorithmsDir + "tfidf.py")
+                    //.addPyFile(sparkHome + "/py-files/numpy.zip")
                     .setMaster("yarn")
                     .setDeployMode("cluster")
-                    .addAppArgs(inputFilePath)
+                    .addFile(venvDir)
+                    .addAppArgs(inputFilePath, "20", "0.001")  // Example arguments
                     .setVerbose(true)
                     .launch();
 
             int exitCode = spark.waitFor();
             System.out.println("Spark job finished with exit code: " + exitCode);
 
-            //deleteHDFSDirectory(outputPath);
-
-            String renameInputFile = fileNames.stream()
-                    .map(fileName -> fileName.substring(0, fileName.lastIndexOf('.'))) // Remove file extension
-                    .collect(Collectors.joining("_")) + ".txt";
-            String renameNewFile = "lda_" + renameInputFile;
-            if(exitCode == 0) {
+            // Handle the output if the job is successful
+            if (exitCode == 0) {
+                String renameInputFile = fileNames.stream()
+                        .map(fileName -> fileName.substring(0, fileName.lastIndexOf('.'))) // Remove file extension
+                        .collect(Collectors.joining("_")) + ".txt";
+                String renameNewFile = "tfidf_" + renameInputFile;
                 renameAndMoveHdfsFile(outputPath + "/part-00000", renameNewFile);
             }
 
