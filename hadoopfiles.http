@@ -100,3 +100,7 @@ Content-Type: application/json
 ### Test Data Transfer Service - Read Parquet File
 GET http://localhost:8080/data/parquet
 Accept: application/json
+
+### Test view by directory
+GET http://localhost:8080/api/file/by-directory?directoryPath=/user/hadoop/inputs/
+Accept: application/json
