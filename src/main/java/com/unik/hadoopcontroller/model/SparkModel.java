@@ -2,13 +2,15 @@ package com.unik.hadoopcontroller.model;
 
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 public class SparkModel {
 
 //    @Id
 //    private String id;
     private String inputDirectoryPath;
-    private String inputFileName;
+    private List<String> inputFileName;
     private String outputDirectoryPath;
     private String outputFileName;
     private String algorithmName;                  // List<String>
@@ -22,11 +24,11 @@ public class SparkModel {
 //    }
 
 
-    public String getInputFileName() {
+    public List<String> getInputFileName() {
         return inputFileName;
     }
 
-    public void setInputFileName(String inputFileName) {
+    public void setInputFileName(List<String> inputFileName) {
         this.inputFileName = inputFileName;
     }
 

@@ -44,7 +44,9 @@ public class SparkConfig {
                     .setMaster(master)
                     .set("fs.defaultFS", fsUri)
                     .set("spark.submit.deployMode", deployMode)
-                    .set("spark.logConf", "true");
+                    .set("spark.logConf", "true")
+            .set("spark.cleaner.referenceTracking.cleanCheckpoints", "false");
+
 
             System.out.println("SparkConf initialized successfully.");
             return sparkConf;

@@ -27,15 +27,28 @@ GET http://localhost:8080/files/read?path=/user/hadoop/inputs/d5405a50-94a6-41fa
 Accept: application/json
 
 
-### Test Spark Job Submission
-POST http://localhost:8080/spark/submit?fileName=alice.txt&hdfsFilePath=/user/hadoop/analysis/
+### Test Wordcount Spark Job Submission
+POST http://localhost:8080/spark/submit?algorithmName=wordcount
 Content-Type: application/json
 
 {
-  "inputDirectoryPath": "inputs/",
-  "inputFileName": "alice.txt",
-  "outputDirectoryPath": "/user/hadoop/analysis/",
-  "algorithmName": "wordcount.py"
+  "inputFileName": ["alice.txt", "buggy.txt", "game.txt"]
+}
+
+### Test KMeans Spark Job Submission
+POST http://localhost:8080/spark/submit?algorithmName=kmeans
+Content-Type: application/json
+
+{
+  "inputFileName": ["alice.txt", "buggy.txt", "game.txt"]
+}
+
+### Test LDA Spark Job Submission
+POST http://localhost:8080/spark/submit?algorithmName=lda
+Content-Type: application/json
+
+{
+  "inputFileName": ["alice.txt", "buggy.txt", "game.txt"]
 }
 
 ### Find all files
