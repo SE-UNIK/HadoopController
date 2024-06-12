@@ -9,6 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/spark")
+@CrossOrigin(origins = "http://localhost:8081")
 public class SparkController {
 
     @Autowired
