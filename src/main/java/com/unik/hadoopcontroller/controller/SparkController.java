@@ -5,6 +5,7 @@ import com.unik.hadoopcontroller.service.SparkSubmitJobService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.unik.hadoopcontroller.model.HdfsFileModel;
@@ -51,9 +52,12 @@ public class SparkController {
 
 
     @GetMapping("/results")
-    public String getWordCountResults() throws IOException {
+    public ResponseEntity<String> getWordCountResults() throws IOException {
         String filePath = "/home/hadoop/wordcount/part-00000";
-        return hdfsDirectService.readFromHdfs(filePath);
+        String fileContent = hdfsDirectService.readFromHdfs(filePath);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN_VALUE)
+                .body(fileContent);
     }
 
     @GetMapping("/results/wordcount")
