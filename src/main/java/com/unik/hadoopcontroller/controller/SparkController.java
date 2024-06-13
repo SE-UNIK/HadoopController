@@ -4,7 +4,7 @@ import com.unik.hadoopcontroller.model.SparkModel;
 import com.unik.hadoopcontroller.service.SparkSubmitJobService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
+import com.unik.hadoopcontroller.model.HdfsFileModel;
 import java.util.List;
 
 @RestController
@@ -37,5 +37,10 @@ public class SparkController {
         List<String> fileNames = sparkModel.getInputFileName();
         sparkSubmitJobService.launchTFIDFSparkJob(fileNames);
         return "LDA Spark job launched successfully";
+    }
+
+    @GetMapping("/results/wordcount")
+    public List<HdfsFileModel> getWordCountResults() {
+        return sparkSubmitJobService.getWordCountResults();
     }
 }

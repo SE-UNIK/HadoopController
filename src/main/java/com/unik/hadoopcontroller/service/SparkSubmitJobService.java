@@ -1,7 +1,9 @@
 package com.unik.hadoopcontroller.service;
 
 import com.unik.hadoopcontroller.CustomMultipartFile;
+import com.unik.hadoopcontroller.model.HdfsFileModel;
 import com.unik.hadoopcontroller.model.SparkModel;
+import com.unik.hadoopcontroller.repository.HdfsFileRepository;
 import org.apache.spark.launcher.SparkLauncher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,8 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Executors;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
@@ -23,9 +24,6 @@ import org.apache.parquet.hadoop.util.HadoopInputFile;
 import org.apache.parquet.avro.AvroParquetReader;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,6 +34,8 @@ public class SparkSubmitJobService {
     private final String inputFilesDir = "/user/hadoop/inputs/";
     private final String venvDir = "/home/hadoop/spark/venv.tar.gz#venv";
 
+    @Autowired
+    HdfsFileRepository hdfsFileRepository;
     public static void deleteHDFSDirectory(String directoryPath) {
         Configuration configuration = new Configuration();
         try {
@@ -52,7 +52,11 @@ public class SparkSubmitJobService {
             throw new RuntimeException("Failed to delete HDFS directory", e);
         }
     }
-
+    public List<HdfsFileModel> getWordCountResults() {
+        return hdfsFileRepository.findAll().stream()
+                .filter(file -> file.getFilePath().startsWith("/home/hadoop/wordcount_result"))
+                .collect(Collectors.toList());
+    }
     private void renameAndMoveHdfsFile(String sourcePathStr, String destPathStr) {
         Configuration configuration = new Configuration();
         try {
@@ -103,6 +107,14 @@ public class SparkSubmitJobService {
                     .setVerbose(true)
                     .launch();
 
+            HdfsFileModel hdfsFileModel = new HdfsFileModel();
+            hdfsFileModel.setFileName("part-00000");
+            hdfsFileModel.setFilePath("/home/hadoop/wordcount_result");
+            hdfsFileModel.setFileSize(100);
+            hdfsFileModel.setTitle("Word Count Result");
+            hdfsFileModel.setAuthors(Collections.singletonList("Spark Word Count Analysis"));
+            // Add other metadata fields as needed
+            hdfsFileRepository.save(hdfsFileModel);
             int exitCode = spark.waitFor();
             System.out.println("Spark job finished with exit code: " + exitCode);
 
