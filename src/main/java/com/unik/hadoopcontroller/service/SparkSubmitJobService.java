@@ -131,31 +131,31 @@ public class SparkSubmitJobService {
         String outputPath = "/home/hadoop/kmeans_result";
         System.out.println("Starting KMeans Spark Job");
         try {
+            // Concatenate all file names into a single string separated by commas
             String inputFilePath = fileNames.stream()
                     .map(fileName -> inputFilesDir + fileName)
                     .collect(Collectors.joining(","));
 
-            //String args = inputFilePath + " 3 1.0";
-            System.out.println("Launching spark job: " + inputFilePath);
+            System.out.println("Launching spark job with input files: " + inputFilePath);
             spark = new SparkLauncher()
                     .setSparkHome(sparkHome)
                     .setAppResource(systemSparkAlgorithmsDir + "kmeans_al.py")
-                    //.addPyFile(sparkHome + "/py-files/numpy.zip")
                     .setMaster("yarn")
                     .setDeployMode("cluster")
-                    .addFile(venvDir)
-                    .addAppArgs(inputFilePath, "2", "0.001")
+                    .addFile(venvDir) // Include the virtual environment
+                    .addAppArgs(inputFilePath, "3", "0.01")  // Example arguments: 3 clusters, 0.01 convergence distance
                     .setVerbose(true)
                     .launch();
 
             int exitCode = spark.waitFor();
             System.out.println("Spark job finished with exit code: " + exitCode);
 
-            String renameInputFile = fileNames.stream()
-                    .map(fileName -> fileName.substring(0, fileName.lastIndexOf('.'))) // Remove file extension
-                    .collect(Collectors.joining("_")) + ".txt";
-            String renameNewFile = "kmeans_" + renameInputFile;
-            if(exitCode == 0) {
+            // Handle the output if the job is successful
+            if (exitCode == 0) {
+                String renameInputFile = fileNames.stream()
+                        .map(fileName -> fileName.substring(0, fileName.lastIndexOf('.'))) // Remove file extension
+                        .collect(Collectors.joining("_")) + ".txt";
+                String renameNewFile = "kmeans_" + renameInputFile;
                 renameAndMoveHdfsFile(outputPath + "/part-00000", renameNewFile);
             }
 
@@ -167,6 +167,9 @@ public class SparkSubmitJobService {
             throw new RuntimeException(e);
         }
     }
+
+
+
 
     public void launchTFIDFSparkJob(List<String> fileNames) {
         Process spark = null;
@@ -187,7 +190,7 @@ public class SparkSubmitJobService {
                     .setMaster("yarn")
                     .setDeployMode("cluster")
                     .addFile(venvDir)
-                    .addAppArgs(inputFilePath, "20", "0.001")  // Example arguments
+                    .addAppArgs(inputFilePath, "2", "0.001")  // Example arguments
                     .setVerbose(true)
                     .launch();
 

@@ -40,7 +40,7 @@ POST http://localhost:8080/spark/submit/kmeans
 Content-Type: application/json
 
 {
-  "inputFileName": ["alice.txt", "buggy.txt", "game.txt"]
+  "inputFileName": ["alice.txt"]
 }
 
 ### Test TF-IDF Spark Job Submission
