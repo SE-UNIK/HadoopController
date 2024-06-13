@@ -16,7 +16,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
-
+import com.unik.hadoopcontroller.model.UploadResponse;
 
 @RequestMapping("/files")
 @CrossOrigin(origins = "http://localhost:8081")
@@ -45,18 +45,20 @@ public class HdfsDirectController {
         }
     }
     @PostMapping("/upload")
-    public String uploadFile(@RequestParam("file") MultipartFile file,
-                         @RequestParam String title,
-                         @RequestParam List<String> authors) {
+    public ResponseEntity<UploadResponse> uploadFile(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam String title,
+            @RequestParam List<String> authors) {
         String originalFileName = file.getOriginalFilename();
         if (originalFileName == null) {
-            return "Error: Could not determine original file name.";
+            return ResponseEntity.badRequest().body(new UploadResponse("Error: Could not determine original file name."));
         }
         try {
             hdfsDirectService.writeToHdfsUnique(originalFileName, file, title, authors);
-            return "Successfully written to HDFS.";
+            return ResponseEntity.ok(new UploadResponse("Successfully written to HDFS."));
         } catch (IOException e) {
-            return "Error uploading to HDFS: " + e.getMessage();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new UploadResponse("Error uploading to HDFS: " + e.getMessage()));
         }
     }
 
