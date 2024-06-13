@@ -50,15 +50,15 @@ public class SparkController {
     }
 
 
-//   @GetMapping("/results/wordcount")
-//    public String getWordCountResults() throws IOException {
-//        String filePath = "/home/hadoop/wordcount_result/part-00000";
-//        return hdfsDirectService.readFromHdfs(filePath);
-//    }
+    @GetMapping("/results")
+    public String getWordCountResults() throws IOException {
+        String filePath = "/home/hadoop/wordcount/part-00000";
+        return hdfsDirectService.readFromHdfs(filePath);
+    }
 
     @GetMapping("/results/wordcount")
     public ResponseEntity<Resource> downloadWordcountResults() throws IOException {
-        String filePath = "/home/hadoop/wordcount_result/part-00000";
+        String filePath = "/home/hadoop/wordcount/part-00000";
         Resource resource = hdfsDirectService.downloadFileByPath(filePath);
 
         return ResponseEntity.ok()
