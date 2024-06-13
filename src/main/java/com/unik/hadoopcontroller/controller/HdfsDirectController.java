@@ -112,4 +112,16 @@ public class HdfsDirectController {
         }
     }
 
+    @GetMapping("/files/download/")
+    public ResponseEntity<Resource> downloadFileWithFilePath(@RequestParam String filePath) {
+        try {
+            Resource file = hdfsDirectService.downloadFileByPath(filePath);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filepath=\"" + filePath + "\"")
+                    .body(file);
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unable to download file", e);
+        }
+    }
+
 }
