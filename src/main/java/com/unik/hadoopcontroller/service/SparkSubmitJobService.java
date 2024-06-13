@@ -54,7 +54,7 @@ public class SparkSubmitJobService {
     }
     public List<HdfsFileModel> getWordCountResults() {
         return hdfsFileRepository.findAll().stream()
-                .filter(file -> file.getFilePath().startsWith("/home/hadoop/wordcount_result"))
+                .filter(file -> file.getFilePath().startsWith("/home/hadoop/wordcount_result/"))
                 .collect(Collectors.toList());
     }
     private void renameAndMoveHdfsFile(String sourcePathStr, String destPathStr) {
@@ -109,7 +109,7 @@ public class SparkSubmitJobService {
 
             HdfsFileModel hdfsFileModel = new HdfsFileModel();
             hdfsFileModel.setFileName("part-00000");
-            hdfsFileModel.setFilePath("/home/hadoop/wordcount_result");
+            hdfsFileModel.setFilePath("/home/hadoop/wordcount_result/part-00000");
             hdfsFileModel.setFileSize(100);
             hdfsFileModel.setTitle("Word Count Result");
             hdfsFileModel.setAuthors(Collections.singletonList("Spark Word Count Analysis"));

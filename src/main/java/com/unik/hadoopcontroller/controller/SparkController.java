@@ -5,7 +5,11 @@ import com.unik.hadoopcontroller.service.SparkSubmitJobService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import com.unik.hadoopcontroller.model.HdfsFileModel;
+
+import java.io.IOException;
 import java.util.List;
+
+import com.unik.hadoopcontroller.service.HdfsDirectService;
 
 @RestController
 @RequestMapping("/spark")
@@ -14,6 +18,9 @@ public class SparkController {
 
     @Autowired
     private SparkSubmitJobService sparkSubmitJobService;
+
+    @Autowired
+    private HdfsDirectService hdfsDirectService;
 
     @PostMapping("/submit/wordcount")
     public String launchWordcountJob(@RequestBody SparkModel sparkModel) {
@@ -39,8 +46,10 @@ public class SparkController {
         return "LDA Spark job launched successfully";
     }
 
-    @GetMapping("/results/wordcount")
-    public List<HdfsFileModel> getWordCountResults() {
-        return sparkSubmitJobService.getWordCountResults();
+
+   @GetMapping("/results/wordcount")
+    public String getWordCountResults() throws IOException {
+        String filePath = "/home/hadoop/wordcount_result/part-00000";
+        return hdfsDirectService.readFromHdfs(filePath);
     }
 }
