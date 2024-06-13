@@ -8,15 +8,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
+import com.unik.hadoopcontroller.model.SparkModel;
+import com.unik.hadoopcontroller.service.HdfsDirectService;
+import com.unik.hadoopcontroller.service.SparkSubmitJobService;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.FileNotFoundException;
+import java.io.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +39,10 @@ public class HdfsDirectService {
 
     @Value("${spring.hadoop.fsUri}")
     private String fsDefaultFS;
+
+    @Autowired
+    private SparkSubmitJobService sparkSubmitJobService;
+
 
     @Autowired
     private HdfsFileRepository hdfsFileRepository;
@@ -172,6 +182,17 @@ public class HdfsDirectService {
         }
 
         return tempFile;
+    }
+
+    public Resource downloadFileByPath(String filePathStr) throws IOException {
+        Path filePath = new Path(filePathStr);
+
+        if (!fileSystem.exists(filePath)) {
+            throw new FileNotFoundException("File not found in HDFS: " + filePathStr);
+        }
+
+        FSDataInputStream inputStream = fileSystem.open(filePath);
+        return new InputStreamResource(inputStream);
     }
 
 }
